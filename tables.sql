@@ -38,8 +38,6 @@ CREATE TABLE if not exists users
 	CHECK (user_type="teacher" OR user_type="student")
 );
 
-/*user_id = username*/
-/*book_id = isbn*/
 
 CREATE TABLE if not exists books
 (
@@ -122,7 +120,7 @@ CREATE TABLE if not exists reservations
 	book_id char(13),
 	FOREIGN KEY (book_id) REFERENCES books(isbn),
 	reservation_date datetime default current_timestamp,
-	primary key (user_id,book_id)
+	id int auto_increment primary key	
 );
 
 CREATE TABLE if not exists borrowings
@@ -132,7 +130,7 @@ CREATE TABLE if not exists borrowings
 	book_id char(13),
 	FOREIGN KEY (book_id) REFERENCES books(isbn),
 	borrow_date datetime default current_timestamp,
-	primary key (user_id,book_id),
+	id int auto_increment primary key ,
 	duration_in_days int not null,
 	check (duration_in_days>0),
 	returned boolean default false
