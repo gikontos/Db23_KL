@@ -38,6 +38,8 @@ CREATE TABLE if not exists users
 	CHECK (user_type="teacher" OR user_type="student")
 );
 
+/*user_id = username*/
+/*book_id = isbn*/
 
 CREATE TABLE if not exists books
 (
