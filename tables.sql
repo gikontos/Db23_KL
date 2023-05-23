@@ -303,7 +303,7 @@ BEGIN
     
     SELECT schools_books.no_copies into count
 	FROM schools_books
-	JOIN books ON schools_books.book_id = books.isbn
+	JOIN books ON schools_books.isbn = books.isbn
 	join schools on schools_books.school_id=schools.school_id
 WHERE books.isbn = new.book_id;
     
