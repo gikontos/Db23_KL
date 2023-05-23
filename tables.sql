@@ -12,16 +12,16 @@ USE LibraryManagement;
 
 
 CREATE TABLE if not exists schools
-(   school_name varchar(30) not null,
+(   school_name varchar(30) unique not null,
 	school_id int auto_increment PRIMARY KEY,
 	principal_first_name varchar(20) NOT NULL,
 	principal_last_name varchar(20) NOT NULL,
 	operator_first_name varchar(20) NOT NULL,
 	operator_last_name varchar(20) NOT NULL,
 	city varchar(20) NOT NULL,
-	address varchar(20) NOT NULL,
-	email varchar(40),
-	phone varchar(15) 
+	address varchar(20) unique NOT NULL,
+	email varchar(40) unique,
+	phone varchar(15) unique 
 );
 
 
@@ -132,7 +132,7 @@ CREATE TABLE if not exists borrowings
 	borrow_date datetime default current_timestamp,
 	id int auto_increment primary key ,
 	duration_in_days int not null,
-	check (duration_in_days>0),
+	check (30>duration_in_days>0),
 	returned boolean default false
 );
 
@@ -238,6 +238,7 @@ BEGIN
 END$
 DELIMITER ;
 
+
 DELIMITER $ --handling pending return
 
 CREATE TRIGGER check_delayed_return BEFORE INSERT ON reservations
@@ -291,3 +292,32 @@ BEGIN
 END$
 
 DELIMITER ;
+
+
+DELIMITER $ --handling no more copies left for school
+CREATE TRIGGER check_available_copies
+BEFORE INSERT ON borrowings
+FOR EACH ROW
+BEGIN
+    DECLARE count INT;
+    
+    SELECT schools_books.no_copies into count
+	FROM schools_books
+	JOIN books ON schools_books.book_id = books.isbn
+	join schools on schools_books.school_id=schools.school_id
+WHERE books.isbn = new.book_id;
+    
+    IF (count = 0) THEN
+    SIGNAL SQLSTATE '45000'
+      SET MESSAGE_TEXT = 'Cannot borrow. Not enough copies.';
+  	END IF;
+END$
+DELIMITER ;
+
+create view late_returns as 
+SELECT borrowings.id, borrowings.borrow_date, borrowings.duration_in_days, books.title, users.username
+from borrowings
+join books on borrowings.book_id=books.book_id
+join users on borrowings.user_id=users.username
+where (borrowings.borrow_date + INTERVAL borrowings.duration_in_days DAY)<current_date and borrowings.returned=false;
+
