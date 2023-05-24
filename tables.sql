@@ -10,20 +10,15 @@ CREATE DATABASE if not exists LibraryManagement CHARACTER SET utf8 COLLATE utf8_
 USE LibraryManagement;
 
 
-
 CREATE TABLE if not exists schools
 (   school_name varchar(30) unique not null,
 	school_id int auto_increment PRIMARY KEY,
 	principal_first_name varchar(20) NOT NULL,
 	principal_last_name varchar(20) NOT NULL,
-	operator_first_name varchar(20),
-	operator_last_name varchar(20),
 	city varchar(20) NOT NULL,
 	address varchar(20) unique NOT NULL,
 	email varchar(40) unique,
-	phone varchar(15) unique,
-	FOREIGN key operator_first_name references users(first_name),
-	FOREIGN key operator_last_name references users(last_name)
+	phone varchar(15) unique
 
 );
 
@@ -32,13 +27,21 @@ CREATE TABLE if not exists schools
 CREATE TABLE if not exists users
 (
 	username varchar(20) NOT NULL PRIMARY KEY,
-	first_name varchar(20) NOT NULL,
-	last_name varchar(20) NOT NULL,
+	first_name varchar(20) NOT NULL ,
+	last_name varchar(20) NOT NULL ,
 	password varchar(30) NOT NULL,
 	user_type varchar(20) NOT NULL,
 	school_id int NOT null,
 	FOREIGN KEY (school_id) REFERENCES schools(school_id) ,
 	CHECK (user_type="teacher" OR user_type="student")
+);
+
+create table if not exists operators(
+	user_id varchar(20),
+	school_id int,
+	FOREIGN key (user_id) references users(username),
+	FOREIGN key (school_id) references schools(school_id),
+	primary key (user_id,school_id)
 );
 
 
@@ -90,7 +93,7 @@ CREATE TABLE if not exists  reviews
 (
 	review_text varchar(500),
 	likert int NOT NULL,
-	user_id varchar(20),
+	user_id varchar(20) not null,
 	FOREIGN KEY (user_id) references users(username) ,
 	book_id char(13) not null ,
 	FOREIGN KEY (book_id) REFERENCES books(isbn),
@@ -316,6 +319,54 @@ WHERE books.isbn = new.book_id;
       SET MESSAGE_TEXT = 'Cannot borrow. Not enough copies.';
   	END IF;
 END$
+DELIMITER ;
+
+DELIMITER $ --check each school has one operator and one operator operates one school
+CREATE TRIGGER check_one_operator BEFORE INSERT ON operators
+FOR EACH ROW
+BEGIN
+  DECLARE flag_value BOOLEAN;
+  
+  
+  SELECT EXISTS(
+    SELECT 1
+    FROM operators
+    WHERE school_id = NEW.school_id
+      
+  ) INTO flag_value;
+  
+  -- If there is a matching row, raise an error
+  IF flag_value = TRUE THEN
+    SIGNAL SQLSTATE '45000'
+      SET MESSAGE_TEXT = 'Cannot insert. There is already an operator for this school.';
+  END IF;
+  
+END$
+
+DELIMITER ;
+
+DELIMITER $ --check that an operator must operate the school in which he belongs
+CREATE TRIGGER check_operator BEFORE INSERT ON operators
+FOR EACH ROW
+BEGIN
+  DECLARE flag_value BOOLEAN;
+  
+  
+  SELECT EXISTS(
+    SELECT 1
+    FROM users
+    WHERE new.user_id=username and school_id!=new.school_id
+      
+  ) INTO flag_value;
+  
+  -- If there is a matching row, raise an error
+  IF flag_value = TRUE THEN
+    SIGNAL SQLSTATE '45000'
+      SET MESSAGE_TEXT = 'Cannot insert. This teacher belong to another school			.';
+  END IF;
+  
+END$
+
 DELIMITER ;
 
 create view late_returns as 
