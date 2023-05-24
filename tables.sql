@@ -16,12 +16,15 @@ CREATE TABLE if not exists schools
 	school_id int auto_increment PRIMARY KEY,
 	principal_first_name varchar(20) NOT NULL,
 	principal_last_name varchar(20) NOT NULL,
-	operator_first_name varchar(20) NOT NULL,
-	operator_last_name varchar(20) NOT NULL,
+	operator_first_name varchar(20),
+	operator_last_name varchar(20),
 	city varchar(20) NOT NULL,
 	address varchar(20) unique NOT NULL,
 	email varchar(40) unique,
-	phone varchar(15) unique 
+	phone varchar(15) unique,
+	FOREIGN key operator_first_name references users(first_name),
+	FOREIGN key operator_last_name references users(last_name)
+
 );
 
 
@@ -46,15 +49,16 @@ CREATE TABLE if not exists books
 	publisher varchar(40) not null,
 	image blob,
 	summary varchar(500),
-	no_pages int
+	no_pages int,
+	keywords varchar(100)
 );
 
 
-
+/*
 CREATE TABLE if not exists keywords
 (
 	word varchar(20) NOT NULL PRIMARY KEY
-);
+);*/
 
 /*
 CREATE TABLE if not exists publishers
@@ -138,7 +142,7 @@ CREATE TABLE if not exists borrowings
 
 
 
-
+/*
 CREATE TABLE if not exists keyword_book
 (
 	
@@ -148,7 +152,7 @@ CREATE TABLE if not exists keyword_book
 	FOREIGN KEY (keyword) REFERENCES keywords(word),
 	primary key (book_id,keyword)
 );
-
+*/
 CREATE TABLE IF not exists category_book 
 (
     book_id CHAR(13),
@@ -303,7 +307,7 @@ BEGIN
     
     SELECT schools_books.no_copies into count
 	FROM schools_books
-	JOIN books ON schools_books.isbn = books.isbn
+	JOIN books ON schools_books.book_id = books.isbn
 	join schools on schools_books.school_id=schools.school_id
 WHERE books.isbn = new.book_id;
     
@@ -317,7 +321,7 @@ DELIMITER ;
 create view late_returns as 
 SELECT borrowings.id, borrowings.borrow_date, borrowings.duration_in_days, books.title, users.username
 from borrowings
-join books on borrowings.book_id=books.book_id
+join books on borrowings.book_id=books.isbn
 join users on borrowings.user_id=users.username
 where (borrowings.borrow_date + INTERVAL borrowings.duration_in_days DAY)<current_date and borrowings.returned=false;
 
