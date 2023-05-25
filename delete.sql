@@ -1,0 +1,14 @@
+SET FOREIGN_KEY_CHECKS = 0;
+delete from schools;
+delete from users;
+delete from operators;
+delete from books;
+delete from writers;
+delete from categories;
+delete from reviews;
+delete from reservations;
+delete from schools_books;
+delete from borrowings;
+delete from category_book;
+delete from book_writer;
+SET FOREIGN_KEY_CHECKS = 1;
