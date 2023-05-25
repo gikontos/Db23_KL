@@ -12,7 +12,7 @@ TABLE_NAME = "schools"
 TABLE_COLUMNS = ["school_name", "principal_first_name", "principal_last_name","city","address","email","phone"]
 content = ""
 # fake_IDs = set(fake.unique.random_int(min=100000, max=999999) for i in range(DUMMY_DATA_NUMBER))
-school_ids=[i for i in range(DUMMY_DATA_NUMBER)]
+school_ids=[i+1 for i in range(DUMMY_DATA_NUMBER)]
 for i in range(DUMMY_DATA_NUMBER):
 
 
@@ -62,7 +62,7 @@ for i in range(DUMMY_DATA_NUMBER):
     x=random.randint(8,30)
     password=fake.password(length=x)
     #school_id=random.choice(school_ids)
-    school_id=i%3
+    school_id=i%3 + 1
     content += f'INSERT INTO {TABLE_NAME} ({",".join(TABLE_COLUMNS)}) VALUES ("{username}","{firstname}","{lastname}","{password}","teacher",{school_id});\n'
 
 ########################### books ###########################
