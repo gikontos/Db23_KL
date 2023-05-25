@@ -1,0 +1,14 @@
+SET FOREIGN_KEY_CHECKS = 0;
+delete TABLE IF EXISTS schools;
+delete TABLE IF EXISTS users;
+delete TABLE IF EXISTS operators;
+delete TABLE IF EXISTS books;
+delete TABLE IF EXISTS writers;
+delete TABLE IF EXISTS categories;
+delete TABLE IF EXISTS reviews;
+delete TABLE IF EXISTS reservations;
+delete TABLE IF EXISTS schools_books;
+delete TABLE IF EXISTS borrowings;
+delete TABLE IF EXISTS category_book;
+delete TABLE IF EXISTS book_writer;
+SET FOREIGN_KEY_CHECKS = 1;
