@@ -9,7 +9,7 @@ fake = faker.Faker()
 
 DUMMY_DATA_NUMBER = 3
 TABLE_NAME = "schools"
-TABLE_COLUMNS = ["school_name", "principal_first_name", "principal_last_name","city","adress","email","phone"]
+TABLE_COLUMNS = ["school_name", "principal_first_name", "principal_last_name","city","address","email","phone"]
 content = ""
 # fake_IDs = set(fake.unique.random_int(min=100000, max=999999) for i in range(DUMMY_DATA_NUMBER))
 school_ids=[i for i in range(DUMMY_DATA_NUMBER)]
@@ -63,7 +63,7 @@ for i in range(DUMMY_DATA_NUMBER):
     password=fake.password(length=x)
     #school_id=random.choice(school_ids)
     school_id=i%3
-    content += f'INSERT INTO {TABLE_NAME} ({",".join(TABLE_COLUMNS)}) VALUES ("{username}","{firstname}","{lastname}","{password}","teacher","{school_id}");\n'
+    content += f'INSERT INTO {TABLE_NAME} ({",".join(TABLE_COLUMNS)}) VALUES ("{username}","{firstname}","{lastname}","{password}","teacher",{school_id});\n'
 
 ########################### books ###########################
 
@@ -88,7 +88,7 @@ for i in range(DUMMY_DATA_NUMBER):
     for x in keywords_list:
         keywords+=x+","
     keywords=keywords[:-1]
-    content += f'INSERT INTO {TABLE_NAME} ({",".join(TABLE_COLUMNS)}) VALUES ("{isbn}","{title}","{publisher}","NULL","{summary}","{no_pages}","{keywords}");\n'
+    content += f'INSERT INTO {TABLE_NAME} ({",".join(TABLE_COLUMNS)}) VALUES ("{isbn}","{title}","{publisher}",NULL,"{summary}",{no_pages},"{keywords}");\n'
 
 ########################### writer ###########################
 
@@ -134,7 +134,7 @@ for i in range(DUMMY_DATA_NUMBER):
     likert=random.randint(1,5)
     user_id=random.choice(student_usernames+teacher_usernames)
     book_id=random.choice(isbns)
-    content += f'INSERT INTO {TABLE_NAME} ({",".join(TABLE_COLUMNS)}) VALUES ("{review_text}","{likert}","{user_id}","{book_id}");\n'
+    content += f'INSERT INTO {TABLE_NAME} ({",".join(TABLE_COLUMNS)}) VALUES ("{review_text}",{likert},"{user_id}","{book_id}");\n'
 
 
 
@@ -148,7 +148,7 @@ for i in range(DUMMY_DATA_NUMBER):
     no_copies=random.randint(10,40)
     school_id=random.choice(school_ids)
     book_id=random.choice(isbns)
-    content += f'INSERT INTO {TABLE_NAME} ({",".join(TABLE_COLUMNS)}) VALUES ("{school_id}","{book_id}","{no_copies}");\n'
+    content += f'INSERT INTO {TABLE_NAME} ({",".join(TABLE_COLUMNS)}) VALUES ({school_id},"{book_id}",{no_copies});\n'
 
 
 
@@ -159,9 +159,9 @@ TABLE_COLUMNS = ["user_id","book_id","reservation_date"]
 DUMMY_DATA_NUMBER = 40
 for i in range(DUMMY_DATA_NUMBER):
     reservation=fake.date_time_between(start_date='-7d')
-    school_id=random.choice(school_ids)
+    user_id=random.choice(student_usernames+teacher_usernames)
     book_id=random.choice(isbns)
-    content += f'INSERT INTO {TABLE_NAME} ({",".join(TABLE_COLUMNS)}) VALUES ("{school_id}","{book_id}","{reservation}");\n'
+    content += f'INSERT INTO {TABLE_NAME} ({",".join(TABLE_COLUMNS)}) VALUES ("{user_id}","{book_id}","{reservation}");\n'
 
 
 ########################### borrowings ###########################
@@ -171,28 +171,28 @@ TABLE_COLUMNS = ["user_id","book_id","borrow_date","duration_in_days","returned"
 DUMMY_DATA_NUMBER = 70
 for i in range(DUMMY_DATA_NUMBER):
     borrow=fake.date_time_between(start_date='-1m')
-    school_id=random.choice(school_ids)
+    user_id=random.choice(student_usernames+teacher_usernames)
     book_id=random.choice(isbns)
     duration = random.randint(1,29)
     a=random.uniform(0,1)
     returned=(a>0.3)
-    content += f'INSERT INTO {TABLE_NAME} ({",".join(TABLE_COLUMNS)}) VALUES ("{user_id}","{book_id}","{borrow}","{duration}"."{returned}");\n'
+    content += f'INSERT INTO {TABLE_NAME} ({",".join(TABLE_COLUMNS)}) VALUES ("{user_id}","{book_id}","{borrow}","{duration}",{returned});\n'
 
 
 
 ########################### category-book ###########################
 
-TABLE_NAME = "category-book"
+TABLE_NAME = "category_book"
 TABLE_COLUMNS = ["book_id","category_id"]
 DUMMY_DATA_NUMBER = 70
 for i in isbns:
     book_id=i
-    category=random.choice(categories)
-    content += f'INSERT INTO {TABLE_NAME} ({",".join(TABLE_COLUMNS)}) VALUES ("{book_id}","{category}");\n'
+    category=random.randint(0,len(categories)-1)
+    content += f'INSERT INTO {TABLE_NAME} ({",".join(TABLE_COLUMNS)}) VALUES ("{book_id}",{category});\n'
 for i in range(20):
     book_id = random.choice(isbns)
-    category = random.choice(categories)
-    content += f'INSERT INTO {TABLE_NAME} ({",".join(TABLE_COLUMNS)}) VALUES ("{book_id}","{category}");\n'
+    category = random.randint(0,len(categories))
+    content += f'INSERT INTO {TABLE_NAME} ({",".join(TABLE_COLUMNS)}) VALUES ("{book_id}",{category});\n'
 
 ########################### book-writer ###########################
 
@@ -202,11 +202,11 @@ DUMMY_DATA_NUMBER = 70
 for i in isbns:
     book_id=i
     writer=random.choice(writer_ids)
-    content += f'INSERT INTO {TABLE_NAME} ({",".join(TABLE_COLUMNS)}) VALUES ("{book_id}","{writer}");\n'
+    content += f'INSERT INTO {TABLE_NAME} ({",".join(TABLE_COLUMNS)}) VALUES ("{book_id}",{writer});\n'
 for i in range(20):
     book_id = random.choice(isbns)
     writer = random.choice(writer_ids)
-    content += f'INSERT INTO {TABLE_NAME} ({",".join(TABLE_COLUMNS)}) VALUES ("{book_id}","{writer}");\n'
+    content += f'INSERT INTO {TABLE_NAME} ({",".join(TABLE_COLUMNS)}) VALUES ("{book_id}",{writer});\n'
 
 f = open("dummy_data.sql", "w", encoding="utf-8")
 f.write(content)
