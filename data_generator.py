@@ -42,7 +42,7 @@ for i in range(DUMMY_DATA_NUMBER):
     x=random.randint(8,30)
     password=fake.password(length=x)
     school_id=random.choice(school_ids)
-    content += f'INSERT INTO {TABLE_NAME} ({",".join(TABLE_COLUMNS)}) VALUES ("{username}","{firstname}","{lastname}","{password}","student","{school_id}");\n'
+    content += f'INSERT INTO {TABLE_NAME} ({",".join(TABLE_COLUMNS)}) VALUES ("{username}","{firstname}","{lastname}","{password}","student",{school_id});\n'
 
 
 ########################### teachers ###########################
@@ -118,9 +118,9 @@ for i in categories:
 TABLE_NAME = "operators"
 TABLE_COLUMNS = ["user_id","school_id"]
 DUMMY_DATA_NUMBER = 3
-content += f'INSERT INTO {TABLE_NAME} ({",".join(TABLE_COLUMNS)}) VALUES ("{"user30"}","{0}");\n'
-content += f'INSERT INTO {TABLE_NAME} ({",".join(TABLE_COLUMNS)}) VALUES ("{"user31"}","{1}");\n'
-content += f'INSERT INTO {TABLE_NAME} ({",".join(TABLE_COLUMNS)}) VALUES ("{"user32"}","{2}");\n'
+content += f'INSERT INTO {TABLE_NAME} ({",".join(TABLE_COLUMNS)}) VALUES ("{"user30"}",{0});\n'
+content += f'INSERT INTO {TABLE_NAME} ({",".join(TABLE_COLUMNS)}) VALUES ("{"user31"}",{1});\n'
+content += f'INSERT INTO {TABLE_NAME} ({",".join(TABLE_COLUMNS)}) VALUES ("{"user32"}",{2});\n'
 
 
 
@@ -170,13 +170,13 @@ TABLE_NAME = "borrowings"
 TABLE_COLUMNS = ["user_id","book_id","borrow_date","duration_in_days","returned"]
 DUMMY_DATA_NUMBER = 70
 for i in range(DUMMY_DATA_NUMBER):
-    borrow=fake.date_time_between(start_date='-1m')
+    borrow=fake.date_time_between(start_date='-30d')
     user_id=random.choice(student_usernames+teacher_usernames)
     book_id=random.choice(isbns)
     duration = random.randint(1,29)
     a=random.uniform(0,1)
     returned=(a>0.3)
-    content += f'INSERT INTO {TABLE_NAME} ({",".join(TABLE_COLUMNS)}) VALUES ("{user_id}","{book_id}","{borrow}","{duration}",{returned});\n'
+    content += f'INSERT INTO {TABLE_NAME} ({",".join(TABLE_COLUMNS)}) VALUES ("{user_id}","{book_id}","{borrow}",{duration},{returned});\n'
 
 
 
