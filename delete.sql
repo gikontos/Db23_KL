@@ -1,7 +1,6 @@
 SET FOREIGN_KEY_CHECKS = 0;
 delete from schools;
 delete from users;
-delete from operators;
 delete from books;
 delete from writers;
 delete from categories;
