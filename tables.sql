@@ -15,10 +15,10 @@ CREATE TABLE if not exists schools
 	school_id int auto_increment PRIMARY KEY,
 	principal_first_name varchar(20) NOT NULL,
 	principal_last_name varchar(20) NOT NULL,
-	city varchar(20) NOT NULL,
-	address varchar(20) unique NOT NULL,
+	city varchar(30) NOT NULL,
+	address varchar(60) unique NOT NULL,
 	email varchar(40) unique,
-	phone varchar(15) unique
+	phone varchar(25) unique
 
 );
 
@@ -31,23 +31,23 @@ CREATE TABLE if not exists users
 	last_name varchar(20) NOT NULL ,
 	password varchar(30) NOT NULL,
 	user_type varchar(20) NOT NULL,
-	school_id int NOT null,
+	school_id int,
 	FOREIGN KEY (school_id) REFERENCES schools(school_id) ,
-	CHECK (user_type="teacher" OR user_type="student")
+	CHECK (user_type="teacher" OR user_type="student" or user_type="operator" or user_type="administrator")
 );
 
-create table if not exists operators(
+/* create table if not exists operators(
 	user_id varchar(20),
 	school_id int,
 	FOREIGN key (user_id) references users(username),
 	FOREIGN key (school_id) references schools(school_id),
 	primary key (user_id,school_id)
 );
-
+ */
 
 CREATE TABLE if not exists books
 (
-	isbn char(13) NOT NULL PRIMARY KEY,
+	isbn varchar(13) NOT NULL PRIMARY KEY,
 	title varchar(40) NOT NULL,
 	publisher varchar(40) not null,
 	image blob,
@@ -158,7 +158,7 @@ CREATE TABLE if not exists keyword_book
 */
 CREATE TABLE IF not exists category_book 
 (
-    book_id CHAR(13),
+    book_id VARCHAR(13),
     FOREIGN KEY (book_id) REFERENCES books(isbn),
     category_id int,
     FOREIGN KEY (category_id) REFERENCES categories(id),
@@ -322,7 +322,7 @@ END$
 DELIMITER ;
 
 DELIMITER $ --check each school has one operator and one operator operates one school
-CREATE TRIGGER check_one_operator BEFORE INSERT ON operators
+CREATE TRIGGER check_one_operator BEFORE INSERT ON users
 FOR EACH ROW
 BEGIN
   DECLARE flag_value BOOLEAN;
@@ -330,8 +330,8 @@ BEGIN
   
   SELECT EXISTS(
     SELECT 1
-    FROM operators
-    WHERE school_id = NEW.school_id
+    FROM users
+    WHERE user_type= "operator" and school_id = NEW.school_id
       
   ) INTO flag_value;
   
@@ -345,7 +345,7 @@ END$
 
 DELIMITER ;
 
-DELIMITER $ --check that an operator must operate the school in which he belongs
+/* DELIMITER $ --check that an operator must operate the school in which he belongs
 CREATE TRIGGER check_operator BEFORE INSERT ON operators
 FOR EACH ROW
 BEGIN
@@ -368,7 +368,7 @@ BEGIN
 END$
 
 DELIMITER ;
-
+ */
 create view late_returns as 
 SELECT borrowings.id, borrowings.borrow_date, borrowings.duration_in_days, books.title, users.username
 from borrowings
