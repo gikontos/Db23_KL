@@ -65,6 +65,44 @@ for i in range(DUMMY_DATA_NUMBER):
     school_id=i%3 + 1
     content += f'INSERT INTO {TABLE_NAME} ({",".join(TABLE_COLUMNS)}) VALUES ("{username}","{firstname}","{lastname}","{password}","teacher",{school_id});\n'
 
+
+########################### operators ###########################
+
+
+DUMMY_DATA_NUMBER = 3
+TABLE_NAME = "users"
+TABLE_COLUMNS = ["username", "first_name", "last_name", "password","user_type","school_id"]
+
+
+
+for i in range(DUMMY_DATA_NUMBER):
+    username = "user"+str(i+30)
+    teacher_usernames.append(username)
+    firstname=fake.first_name()
+    lastname = fake.last_name()
+    x=random.randint(8,30)
+    password=fake.password(length=x)
+    #school_id=random.choice(school_ids)
+    school_id=i%3 + 1
+    content += f'INSERT INTO {TABLE_NAME} ({",".join(TABLE_COLUMNS)}) VALUES ("{username}","{firstname}","{lastname}","{password}","operator",{school_id});\n'
+
+########################### administrator ###########################
+
+
+DUMMY_DATA_NUMBER = 1
+TABLE_NAME = "users"
+TABLE_COLUMNS = ["username", "first_name", "last_name", "password","user_type","school_id"]
+
+
+
+
+username = "administrator"
+firstname=fake.first_name()
+lastname = fake.last_name()
+x=random.randint(8,30)
+password=fake.password(length=x)
+content += f'INSERT INTO {TABLE_NAME} ({",".join(TABLE_COLUMNS)}) VALUES ("{username}","{firstname}","{lastname}","{password}","administrator",NULL);\n'
+
 ########################### books ###########################
 
 TABLE_NAME = "books"
@@ -97,7 +135,7 @@ TABLE_COLUMNS = ["first_name", "last_name"]
 DUMMY_DATA_NUMBER = 30
 writer_ids=[]
 for i in range(DUMMY_DATA_NUMBER):
-    writer_ids.append(i)
+    writer_ids.append(i+1)
     firstname=fake.first_name()
     lastname=fake.unique.last_name()
     content += f'INSERT INTO {TABLE_NAME} ({",".join(TABLE_COLUMNS)}) VALUES ("{firstname}","{lastname}");\n'
@@ -115,13 +153,13 @@ for i in categories:
 
 ########################### operators ###########################
 
-TABLE_NAME = "operators"
-TABLE_COLUMNS = ["user_id","school_id"]
-DUMMY_DATA_NUMBER = 3
-content += f'INSERT INTO {TABLE_NAME} ({",".join(TABLE_COLUMNS)}) VALUES ("{"user30"}",{0});\n'
-content += f'INSERT INTO {TABLE_NAME} ({",".join(TABLE_COLUMNS)}) VALUES ("{"user31"}",{1});\n'
-content += f'INSERT INTO {TABLE_NAME} ({",".join(TABLE_COLUMNS)}) VALUES ("{"user32"}",{2});\n'
-
+# TABLE_NAME = "operators"
+# TABLE_COLUMNS = ["user_id","school_id"]
+# DUMMY_DATA_NUMBER = 3
+# content += f'INSERT INTO {TABLE_NAME} ({",".join(TABLE_COLUMNS)}) VALUES ("{"user30"}",{0});\n'
+# content += f'INSERT INTO {TABLE_NAME} ({",".join(TABLE_COLUMNS)}) VALUES ("{"user31"}",{1});\n'
+# content += f'INSERT INTO {TABLE_NAME} ({",".join(TABLE_COLUMNS)}) VALUES ("{"user32"}",{2});\n'
+#
 
 
 ########################### reviews ###########################
@@ -187,11 +225,11 @@ TABLE_COLUMNS = ["book_id","category_id"]
 DUMMY_DATA_NUMBER = 70
 for i in isbns:
     book_id=i
-    category=random.randint(0,len(categories)-1)
+    category=random.randint(1,len(categories))
     content += f'INSERT INTO {TABLE_NAME} ({",".join(TABLE_COLUMNS)}) VALUES ("{book_id}",{category});\n'
 for i in range(20):
     book_id = random.choice(isbns)
-    category = random.randint(0,len(categories))
+    category = random.randint(1,len(categories))
     content += f'INSERT INTO {TABLE_NAME} ({",".join(TABLE_COLUMNS)}) VALUES ("{book_id}",{category});\n'
 
 ########################### book-writer ###########################
