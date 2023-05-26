@@ -1,0 +1,25 @@
+queries:
+
+1) select borrow_date from borrowings join users on user_id=username where school_id=1 and 0<datediff(current_date,borrow_date) and datediff(current_date,borrow_date)< 7;
+
+
+2)select first_name,last_name from category_book join book_writer on category_book.book_id=book_writer.book_id join categories on category_book.category_id=categories.id  join writers on book_writer.writer_id=writers.id where category_name="";
+
+select first_name,last_name from category_book join categories on category_book.category_id= categories.id join books on books.isbn=category_book.book_id join borrowings on borrowings.book_id=books.isbn join users on users.username=borrowings.user_id where users.user_type="teacher" and categories.category_name="math";
+
+3)
+
+4)
+
+5)
+
+2.1) select title, first_name,last_name from books join book_writer on books.isbn=book_writer.book_id join writers on book_writer.writer_id=writers.id;
+
+    select title, first_name,last_name from books join book_writer on books.isbn=book_writer.book_id join writers on book_writer.writer_id=writers.id where books.title LIKE '%text%';
+
+    select title, first_name,last_name from books join book_writer on books.isbn=book_writer.book_id join writers on book_writer.writer_id=writers.id join category_book on category_book.book_id=books.isbn join categories on categories.id=category_book.category_id where categories.category_name='math';
+
+    select title, first_name,last_name from books join book_writer on books.isbn=book_writer.book_id join writers on book_writer.writer_id=writers.id  where writers.first_name='Bruce' and writers.last_name="Perry";
+
+    select title, first_name,last_name from books join book_writer on books.isbn=book_writer.book_id join writers on book_writer.writer_id=writers.id
+    join schools_books on schools_books.book_id=books.isbn  where schools_books.school_id=1 and schools_books.no_copies=10;
