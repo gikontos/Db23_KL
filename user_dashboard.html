@@ -1,0 +1,114 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>user page</title>
+    <style>
+        /* Apply basic styles to the body and container */
+        body {
+            margin: 0;
+            padding: 0;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            font-family: Arial, sans-serif;
+        }
+        .container {
+            display: flex;
+            width: 80vw;
+            height: 80vh;
+        }
+        .top-left-text {
+            position: fixed;
+            top: 3vh;
+            left: 5vw;
+            font-weight: bold;
+            padding: 10px;
+            font-size: 20px;
+            color: #000000;
+            background-color: #ffffff00;
+        }
+        
+        /* Define styles for the left and right columns */
+        .left-column, .right-column {
+            flex-grow: 1;
+            padding: 20px;
+        }
+        .search-bar-container {
+            display: flex;
+            align-items: center;
+            }
+
+        .search-bar-container h2 {
+            margin-right: 10px;
+        }
+        /* Add styles specific to each column */
+        .left-column {
+            background-color: rgb(183, 115, 115);
+        }
+      
+        .right-column {
+            background-color: rgb(127, 187, 227);
+        }
+
+        .search-bars{
+            margin-left: 160px;
+        }
+        
+        /* Style the list items */
+        ul {
+            list-style-type: none;
+            padding: 0;
+            height: 500px; /* Adjust the height as needed */
+            overflow-y: auto; /* Enable vertical scrolling */
+        }
+        
+        li {
+            margin-bottom: 10px;
+        }
+
+    </style>
+</head>
+<body>
+    <div class="top-left-text">{{username}}</div>
+    <div class="container">
+        <div class="left-column">
+            <div class="search-bar-container">
+                <h2>Available books</h2> 
+                <div class="search-bars">
+                    <form action="/user/{{username}}" method="POST">
+                    <input type="text" name="title" placeholder="Title">              
+                    <input type="text" name="writer" placeholder="Writer">                 
+                    <input type="text" name="category" placeholder="Category">
+                    <button type="submit">Search</button>
+                    </form>
+                </div>
+                
+              </div>
+            <ul>
+                {% for item in available_books %}
+                <li>{{ item }}</li>
+                {% endfor %}
+            </ul>
+        </div>
+        <div class="right-column">
+        <div class="search-bar-container">
+            <h2>Borrowed books</h2> 
+            <div class="search-bars">
+                <form action="/user/{{username}}" method="POST">
+                <input type="text" name="title" placeholder="Title">              
+                <input type="text" name="writer" placeholder="Writer">                 
+                <input type="text" name="category" placeholder="Category">
+                <button type="submit">Search</button>
+                </form>
+            </div>
+            </div>
+            <ul>
+                {% for item in borrowed_books %}
+                <li>{{ item }}</li>
+                {% endfor %}
+            </ul>
+        </div>
+    </div>
+</body>
+</html>
