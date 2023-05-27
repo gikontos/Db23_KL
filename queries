@@ -26,6 +26,10 @@ select first_name,last_name from category_book join categories on category_book.
 
 2.2) select first_name,last_name from users join borrowings on users.username = borrowings.user_id where users.user_type = 'student' and borrowings.returned = False and datediff(current_date,borrowings.borrow_date) >= 7;
 
+2.3) select likert from reviews join users on reviews.user_id = users.username where username = 'user14';
+
+     select likert from reviews join books on reviews.book_id = books.isbn join category_book on category_book.book_id = books.isbn join categories on categories.id = category_book.category_id where category_name = 'math';
+
 3.1) select title from books join schools_books on schools_books.book_id = books.isbn join schools on schools.school_id = schools_books.school_id join users on users.school_id = schools.school_id where users.username = 'user14' and books.title LIKE '%text%';
 
 select title from books join category_book on category_book.book_id = books.isbn join categories on categories.id = categories.id join schools_books on schools_books.book_id = books.isbn join schools on schools.school_id = schools_books.school_id join users on users.school_id = schools.school_id where users.username = 'user14' and categories.category_name='math';
