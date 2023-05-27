@@ -23,3 +23,6 @@ select first_name,last_name from category_book join categories on category_book.
 
     select title, first_name,last_name from books join book_writer on books.isbn=book_writer.book_id join writers on book_writer.writer_id=writers.id
     join schools_books on schools_books.book_id=books.isbn  where schools_books.school_id=1 and schools_books.no_copies=10;
+    
+    
+3.2) select title from books join borrowings on books.isbn = borrowings.book_id join users on users.username = borrowings.user_id where users.username = user14;
