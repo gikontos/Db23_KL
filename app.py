@@ -1,5 +1,5 @@
 from flask import Flask,request, render_template,redirect ,url_for,session
-
+import MySQLdb
 from flask_mysqldb import MySQL
 app = Flask(__name__)
 app.secret_key = 'any random string'
@@ -39,7 +39,7 @@ def index():
         try:
             if password_correct[0] == password:
 
-                
+                session["user"]=username
         
                 
                 if password_correct[1]=="administrator":
@@ -64,22 +64,43 @@ def index():
     return render_template("login.html")
 
 
-
-
+@app.route('/book/<arguement>', methods=["GET","POST"])
+def book_page(arguement):
+    cur=mysql.connection.cursor()
+    cur.execute("select title,keywords,summary,no_pages,publisher,image_url from books where isbn=%s",(arguement,))
+    result=cur.fetchone()
+    return render_template("book_page.html",isbn=arguement,title=result[0],keywords=result[1],summary=result[2],no_pages=result[3],publisher=result[4],image=result[5])
 
 @app.route('/user/<arguement>', methods=["GET","POST"])
 def user_page(arguement):
     if not session.get(arguement):
             session.pop(arguement, None)
             return redirect('/')
-    if request.method=="POST":
+    if "reserve" in request.form:
+        pressed_button=request.form.get("reserve")
+        cur=mysql.connection.cursor()
+        try:
+            cur.execute("insert into reservations (user_id,book_id) values (%s,%s)",(arguement,session["available_isbns"][int(pressed_button)]))
+            mysql.connection.commit()
+        except MySQLdb.OperationalError as e:
+    
+            error_message = str(e)
+            return error_message
+    if "form2" in request.form:
+        arguement=session["user"]
         writer_check=''
         category_check=''
         title_check=''
-        writer=request.form.get("writer")
-        title=request.form.get("title")
+        writer=request.form.get("writer2", "")
+        title=request.form.get("title2", "")
+        category=request.form.get("category2", "")
+        session["writer2"]=writer
+        session["title2"]=title
+        session["category2"]=category
+        writer1=session["writer1"]
+        category1=session["category1"]
+        title1=session["title1"]
         
-        category=request.form.get("category")
         param =(arguement,)
         if title!="":
             title_check="and books.title LIKE %s"
@@ -92,24 +113,83 @@ def user_page(arguement):
             writer_check="and CONCAT(writers.first_name,\" \",writers.last_name) LIKE %s"  
             param+=("%%"+writer+"%%",)
         cur = mysql.connection.cursor()
-        cur.execute("select title from users join schools on users.school_id=schools.school_id join schools_books on schools.school_id=schools_books.school_id join books on schools_books.book_id=isbn join category_book on category_book.book_id=isbn join categories on category_book.category_id=categories.id join book_writer on book_writer.book_id=isbn join writers on writers.id=book_writer.writer_id where users.username=%s "+title_check+category_check+writer_check,param)
+        cur.execute("select title,isbn from users join borrowings on username=user_id join books on book_id=isbn join category_book on category_book.book_id=isbn join categories on category_book.category_id=categories.id join book_writer on book_writer.book_id=isbn join writers on writers.id=book_writer.writer_id where users.username=%s "+title_check+category_check+writer_check,param)
+        result=cur.fetchall()
+        borrowed_titles = [row[0] for row in result]
+        borrowed_isbns = [row[1] for row in result]
+        session["borrowed_titles"]=borrowed_titles
+        session["borrowed_isbns"]=borrowed_isbns
+        available_titles = session["available_titles"]
+        available_isbns=session["available_isbns"]
+             
+        cur.close()
+        return render_template("user_dashboard.html",username=arguement,available_books=available_titles,borrowed_books=borrowed_titles,writer2=writer,category2=category,title2=title,title1=title1,category1=category1,writer1=writer1,available_isbns=available_isbns) 
+    if "form1" in request.form:
+        arguement=session["user"]
+        writer_check=''
+        category_check=''
+        title_check=''
+        writer=request.form.get("writer1", "")
+        title=request.form.get("title1", "")
+        
+        category=request.form.get("category1", "")
+
+        session["writer1"]=writer
+        session["title1"]=title
+        session["category1"]=category
+        writer2=session["writer2"]
+        category2=session["category2"]
+        title2=session["title2"]
+
+        for i in [writer2,title2,category2]:
+            if i==None: i=""
+              
+        param =(arguement,)
+        if title!="":
+            title_check="and books.title LIKE %s"
+            param+=("%%"+title+"%%",)
+            
+        if category!="":
+            category_check="and categories.category_name LIKE %s"  
+            param+=("%%"+category+"%%",)
+        if writer!="":
+            writer_check="and CONCAT(writers.first_name,\" \",writers.last_name) LIKE %s"  
+            param+=("%%"+writer+"%%",)
+        cur = mysql.connection.cursor()
+        cur.execute("select  title,isbn from users join schools on users.school_id=schools.school_id join schools_books on schools.school_id=schools_books.school_id join books on schools_books.book_id=isbn join category_book on category_book.book_id=isbn join categories on category_book.category_id=categories.id join book_writer on book_writer.book_id=isbn join writers on writers.id=book_writer.writer_id where users.username=%s "+title_check+category_check+writer_check,param)
         result=cur.fetchall()
         available_titles = [row[0] for row in result]
-        cur.execute("select title from users join borrowings on user_id=username join books on book_id=isbn where username=%s",(arguement,))
-        result = cur.fetchall()
-        borrowed_titles = [row[0] for row in result]
+        session["available_titles"]=available_titles
+        available_isbns = [row[1] for row in result]
+        session["available_isbns"]=available_isbns
+        borrowed_titles = session["borrowed_titles"]
+        
         cur.close()
-        return render_template("user_dashboard.html",username=arguement,available_books=available_titles,borrowed_books=borrowed_titles) 
+        return render_template("user_dashboard.html",username=arguement,available_books=available_titles,borrowed_books=borrowed_titles,writer1=writer,category1=category,title1=title,title2=title2,category2=category2,writer2=writer2,available_isbns=available_isbns) 
+      
+     
     cur = mysql.connection.cursor()
-    cur.execute("select title from users join schools on users.school_id=schools.school_id join schools_books on schools.school_id=schools_books.school_id join books on schools_books.book_id=isbn where users.username=%s",(arguement,))
+    cur.execute("select  title,isbn from users join schools on users.school_id=schools.school_id join schools_books on schools.school_id=schools_books.school_id join books on schools_books.book_id=isbn where users.username=%s",(arguement,))
     result = cur.fetchall()
     available_titles = [row[0] for row in result]
-    cur.execute("select title from users join borrowings on user_id=username join books on book_id=isbn where username=%s",(arguement,))
+    available_isbns = [row[1] for row in result]
+    cur.execute("select  title,isbn from users join borrowings on user_id=username join books on book_id=isbn where username=%s",(arguement,))
     result = cur.fetchall()
     borrowed_titles = [row[0] for row in result]
+    borrowed_isbns = [row[1] for row in result]
+    session["borrowed_titles"]=borrowed_titles
+    session["available_titles"]=available_titles
+    session["borrowed_isbns"]=borrowed_isbns
+    session["available_isbns"]=available_isbns
+    session["writer1"]=""
+    session["title1"]=""
+    session["category1"]=""
+    session["writer2"]=""
+    session["title2"]=""
+    session["category2"]=""
     cur.close()
     
-    return render_template("user_dashboard.html",username=arguement,available_books=available_titles,borrowed_books=borrowed_titles)
+    return render_template("user_dashboard.html",username=arguement,available_books=available_titles,borrowed_books=borrowed_titles,available_isbns=available_isbns)
 
 
 
