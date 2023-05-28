@@ -113,7 +113,7 @@
             </div>
             <ul>
                 {% for item in borrowed_books %}
-                <li>{{ item }}</li>
+                <li> <a href="/book/{{available_isbns[available_books.index(item)]}}">{{ item }}</a></li>
                 {% endfor %}
             </ul>
         </div>
