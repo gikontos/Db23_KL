@@ -50,7 +50,7 @@ CREATE TABLE if not exists books
 	isbn varchar(13) NOT NULL PRIMARY KEY,
 	title varchar(40) NOT NULL,
 	publisher varchar(40) not null,
-	image blob,
+	image_url varchar(255),
 	summary varchar(500),
 	no_pages int,
 	keywords varchar(100)
@@ -134,13 +134,13 @@ CREATE TABLE if not exists borrowings
 (
 	user_id varchar(20),
 	FOREIGN KEY (user_id) REFERENCES users(username),
-	book_id char(13),
+	book_id varchar(13),
 	FOREIGN KEY (book_id) REFERENCES books(isbn),
 	borrow_date datetime default current_timestamp,
 	id int auto_increment primary key ,
 	duration_in_days int not null,
 	check (30>duration_in_days>0),
-	returned boolean default false
+	returned boolean default False
 );
 
 
