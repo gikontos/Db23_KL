@@ -1,0 +1,36 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>user page</title>
+    <style>
+        .container {
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+        }
+        
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div style="display: flex; align-items: center;">
+            <h2 style="margin-right: 10px;">Title:</h2>
+            <div>{{title}}</div>
+          </div>
+        <div style="display: flex; align-items: center;">
+            <h2 style="margin-right: 10px;">Isbn:</h2>
+            <div>{{isbn}}</div>
+          </div>
+        <h2>Summary: </h2>
+        <div style="max-width: 50vw;"><p>{{summary}}</p></div>
+        
+        <h2>Publisher: </h2> <span>{{publisher}}</span>
+        <h2>Keywords: </h2> <span>{{keywords}}</span>
+        <h2>Number of pages:</h2> <span>{{no_pages}}</span>
+          <img src="{{image}}" alt="Image"> 
+
+  </div>
+</body>
+</html>
