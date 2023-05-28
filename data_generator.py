@@ -76,7 +76,7 @@ TABLE_COLUMNS = ["username", "first_name", "last_name", "password","user_type","
 
 
 for i in range(DUMMY_DATA_NUMBER):
-    username = "user"+str(i+30)
+    username = "user"+str(i+40)
     teacher_usernames.append(username)
     firstname=fake.first_name()
     lastname = fake.last_name()
@@ -107,16 +107,20 @@ content += f'INSERT INTO {TABLE_NAME} ({",".join(TABLE_COLUMNS)}) VALUES ("{user
 
 TABLE_NAME = "books"
 TABLE_COLUMNS = ["isbn", "title", "publisher",
-                 "image", "summary", "no_pages", "keywords"]
+                 "image_url", "summary", "no_pages", "keywords"]
 DUMMY_DATA_NUMBER = 100
 isbns=[]
+
+
 for i in range(DUMMY_DATA_NUMBER):
     isbn=fake.unique.isbn10()
+
     isbns.append(isbn)
     w=random.randint(1,8)
     title=fake.text(max_nb_chars=w*5)
     publisher=fake.first_name()+fake.last_name()
-    image=fake.image()
+
+
     w=random.randint(3,5)
     summary=fake.paragraph(nb_sentences=w)
     no_pages=random.randint(50,600)
@@ -126,7 +130,7 @@ for i in range(DUMMY_DATA_NUMBER):
     for x in keywords_list:
         keywords+=x+","
     keywords=keywords[:-1]
-    content += f'INSERT INTO {TABLE_NAME} ({",".join(TABLE_COLUMNS)}) VALUES ("{isbn}","{title}","{publisher}",NULL,"{summary}",{no_pages},"{keywords}");\n'
+    content += f'INSERT INTO {TABLE_NAME} ({",".join(TABLE_COLUMNS)}) VALUES ("{isbn}","{title}","{publisher}","/photos/book_image.png","{summary}",{no_pages},"{keywords}");\n'
 
 ########################### writer ###########################
 
@@ -211,7 +215,7 @@ for i in range(DUMMY_DATA_NUMBER):
     borrow=fake.date_time_between(start_date='-30d')
     user_id=random.choice(student_usernames+teacher_usernames)
     book_id=random.choice(isbns)
-    duration = random.randint(1,29)
+    duration = 7
     a=random.uniform(0,1)
     returned=(a>0.3)
     content += f'INSERT INTO {TABLE_NAME} ({",".join(TABLE_COLUMNS)}) VALUES ("{user_id}","{book_id}","{borrow}",{duration},{returned});\n'
