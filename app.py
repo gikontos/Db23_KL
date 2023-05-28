@@ -1,4 +1,4 @@
-from flask import Flask,request, render_template,redirect ,url_for,session
+from flask import Flask,request, render_template,redirect ,url_for,session,send_from_directory
 import MySQLdb
 from flask_mysqldb import MySQL
 app = Flask(__name__)
@@ -63,13 +63,25 @@ def index():
 
     return render_template("login.html")
 
+@app.route('/photos/<path:filename>')
+def get_photo(filename):
+    return send_from_directory('photos', filename)
 
 @app.route('/book/<arguement>', methods=["GET","POST"])
 def book_page(arguement):
     cur=mysql.connection.cursor()
     cur.execute("select title,keywords,summary,no_pages,publisher,image_url from books where isbn=%s",(arguement,))
-    result=cur.fetchone()
-    return render_template("book_page.html",isbn=arguement,title=result[0],keywords=result[1],summary=result[2],no_pages=result[3],publisher=result[4],image=result[5])
+    a=cur.fetchone()
+    result=a
+    cur.execute("select first_name, last_name from books join book_writer on book_id=isbn join writers on writer_id=id where isbn=%s",(arguement,))
+    a=cur.fetchall()
+    writers=[i[0]+" "+i[1] for i in a]
+    writers=", ".join(writers)
+    cur.execute("select category_name from books join category_book on book_id=isbn join categories on category_id=id where isbn=%s",(arguement,))
+    a=cur.fetchall()
+    categories=[i[0] for i in a]
+    categories=",".join(categories)
+    return render_template("book_page.html",isbn=arguement,title=result[0],keywords=result[1],summary=result[2],no_pages=result[3],publisher=result[4],image=result[5], writers=writers,categories=categories)
 
 @app.route('/user/<arguement>', methods=["GET","POST"])
 def user_page(arguement):
@@ -113,7 +125,7 @@ def user_page(arguement):
             writer_check="and CONCAT(writers.first_name,\" \",writers.last_name) LIKE %s"  
             param+=("%%"+writer+"%%",)
         cur = mysql.connection.cursor()
-        cur.execute("select title,isbn from users join borrowings on username=user_id join books on book_id=isbn join category_book on category_book.book_id=isbn join categories on category_book.category_id=categories.id join book_writer on book_writer.book_id=isbn join writers on writers.id=book_writer.writer_id where users.username=%s "+title_check+category_check+writer_check,param)
+        cur.execute("select distinct title,isbn from users join borrowings on username=user_id join books on book_id=isbn join category_book on category_book.book_id=isbn join categories on category_book.category_id=categories.id join book_writer on book_writer.book_id=isbn join writers on writers.id=book_writer.writer_id where users.username=%s "+title_check+category_check+writer_check,param)
         result=cur.fetchall()
         borrowed_titles = [row[0] for row in result]
         borrowed_isbns = [row[1] for row in result]
@@ -156,7 +168,7 @@ def user_page(arguement):
             writer_check="and CONCAT(writers.first_name,\" \",writers.last_name) LIKE %s"  
             param+=("%%"+writer+"%%",)
         cur = mysql.connection.cursor()
-        cur.execute("select  title,isbn from users join schools on users.school_id=schools.school_id join schools_books on schools.school_id=schools_books.school_id join books on schools_books.book_id=isbn join category_book on category_book.book_id=isbn join categories on category_book.category_id=categories.id join book_writer on book_writer.book_id=isbn join writers on writers.id=book_writer.writer_id where users.username=%s "+title_check+category_check+writer_check,param)
+        cur.execute("select distinct title,isbn from users join schools on users.school_id=schools.school_id join schools_books on schools.school_id=schools_books.school_id join books on schools_books.book_id=isbn join category_book on category_book.book_id=isbn join categories on category_book.category_id=categories.id join book_writer on book_writer.book_id=isbn join writers on writers.id=book_writer.writer_id where users.username=%s "+title_check+category_check+writer_check,param)
         result=cur.fetchall()
         available_titles = [row[0] for row in result]
         session["available_titles"]=available_titles
@@ -169,11 +181,11 @@ def user_page(arguement):
       
      
     cur = mysql.connection.cursor()
-    cur.execute("select  title,isbn from users join schools on users.school_id=schools.school_id join schools_books on schools.school_id=schools_books.school_id join books on schools_books.book_id=isbn where users.username=%s",(arguement,))
+    cur.execute("select distinct title,isbn from users join schools on users.school_id=schools.school_id join schools_books on schools.school_id=schools_books.school_id join books on schools_books.book_id=isbn where users.username=%s",(arguement,))
     result = cur.fetchall()
     available_titles = [row[0] for row in result]
     available_isbns = [row[1] for row in result]
-    cur.execute("select  title,isbn from users join borrowings on user_id=username join books on book_id=isbn where username=%s",(arguement,))
+    cur.execute("select distinct title,isbn from users join borrowings on user_id=username join books on book_id=isbn where username=%s",(arguement,))
     result = cur.fetchall()
     borrowed_titles = [row[0] for row in result]
     borrowed_isbns = [row[1] for row in result]
