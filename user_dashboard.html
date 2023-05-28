@@ -54,7 +54,11 @@
         .search-bars{
             margin-left: 160px;
         }
-        
+        .reserve-button {
+            float: right; /* Float the sidebar to the right */
+            position: relative;
+            right: 20px;
+        }
         /* Style the list items */
         ul {
             list-style-type: none;
@@ -77,17 +81,21 @@
                 <h2>Available books</h2> 
                 <div class="search-bars">
                     <form action="/user/{{username}}" method="POST">
-                    <input type="text" name="title" placeholder="Title">              
-                    <input type="text" name="writer" placeholder="Writer">                 
-                    <input type="text" name="category" placeholder="Category">
-                    <button type="submit">Search</button>
+                    <input type="text" name="title1" value="{{title1}}" placeholder="Title">              
+                    <input type="text" name="writer1" value="{{writer1}}" placeholder="Writer">                 
+                    <input type="text" name="category1" value="{{category1}}" placeholder="Category">
+                    <button type="submit" name="form1">Search</button>
                     </form>
                 </div>
                 
               </div>
             <ul>
                 {% for item in available_books %}
-                <li>{{ item }}</li>
+                <li><div> 
+                    <form action="/user/{{username}}" method="POST">
+                        <a href="/book/{{available_isbns[available_books.index(item)]}}"> {{item }} </a><button type="submit" name="reserve" value ="{{available_books.index(item)}}" class="reserve-button">reserve</button>
+                    </form>
+                </div> </li>
                 {% endfor %}
             </ul>
         </div>
@@ -96,10 +104,10 @@
             <h2>Borrowed books</h2> 
             <div class="search-bars">
                 <form action="/user/{{username}}" method="POST">
-                <input type="text" name="title" placeholder="Title">              
-                <input type="text" name="writer" placeholder="Writer">                 
-                <input type="text" name="category" placeholder="Category">
-                <button type="submit">Search</button>
+                <input type="text" name="title2" value="{{title2}}" placeholder="Title">              
+                <input type="text" name="writer2" value="{{writer2}}"  placeholder="Writer">                 
+                <input type="text" name="category2" value="{{category2}}" placeholder="Category">
+                <button type="submit" name="form2">Search</button>
                 </form>
             </div>
             </div>
