@@ -30,7 +30,7 @@ for i in range(DUMMY_DATA_NUMBER):
 
 DUMMY_DATA_NUMBER = 30
 TABLE_NAME = "users"
-TABLE_COLUMNS = ["username", "first_name", "last_name", "password","user_type","school_id"]
+TABLE_COLUMNS = ["username", "first_name", "last_name", "password","user_type","school_id","birthday"]
 student_usernames=[]
 
 
@@ -38,11 +38,12 @@ for i in range(DUMMY_DATA_NUMBER):
     username = "user"+str(i)
     student_usernames.append(username)
     firstname=fake.first_name()
+    birthday=fake.date()
     lastname = fake.last_name()
     x=random.randint(8,30)
     password=fake.password(length=x)
     school_id=random.choice(school_ids)
-    content += f'INSERT INTO {TABLE_NAME} ({",".join(TABLE_COLUMNS)}) VALUES ("{username}","{firstname}","{lastname}","{password}","student",{school_id});\n'
+    content += f'INSERT INTO {TABLE_NAME} ({",".join(TABLE_COLUMNS)}) VALUES ("{username}","{firstname}","{lastname}","{password}","student",{school_id},"{birthday}");\n'
 
 
 ########################### teachers ###########################
@@ -50,7 +51,7 @@ for i in range(DUMMY_DATA_NUMBER):
 
 DUMMY_DATA_NUMBER = 10
 TABLE_NAME = "users"
-TABLE_COLUMNS = ["username", "first_name", "last_name", "password","user_type","school_id"]
+TABLE_COLUMNS = ["username", "first_name", "last_name", "password","user_type","school_id","birthday"]
 teacher_usernames=[]
 
 
@@ -60,10 +61,11 @@ for i in range(DUMMY_DATA_NUMBER):
     firstname=fake.first_name()
     lastname = fake.last_name()
     x=random.randint(8,30)
+    birthday=fake.date()
     password=fake.password(length=x)
     #school_id=random.choice(school_ids)
     school_id=i%3 + 1
-    content += f'INSERT INTO {TABLE_NAME} ({",".join(TABLE_COLUMNS)}) VALUES ("{username}","{firstname}","{lastname}","{password}","teacher",{school_id});\n'
+    content += f'INSERT INTO {TABLE_NAME} ({",".join(TABLE_COLUMNS)}) VALUES ("{username}","{firstname}","{lastname}","{password}","teacher",{school_id},"{birthday}");\n'
 
 
 ########################### operators ###########################
@@ -71,7 +73,7 @@ for i in range(DUMMY_DATA_NUMBER):
 
 DUMMY_DATA_NUMBER = 3
 TABLE_NAME = "users"
-TABLE_COLUMNS = ["username", "first_name", "last_name", "password","user_type","school_id"]
+TABLE_COLUMNS = ["username", "first_name", "last_name", "password", "user_type", "school_id", "birthday"]
 
 
 
@@ -81,17 +83,18 @@ for i in range(DUMMY_DATA_NUMBER):
     firstname=fake.first_name()
     lastname = fake.last_name()
     x=random.randint(8,30)
+    birthday=fake.date()
     password=fake.password(length=x)
     #school_id=random.choice(school_ids)
     school_id=i%3 + 1
-    content += f'INSERT INTO {TABLE_NAME} ({",".join(TABLE_COLUMNS)}) VALUES ("{username}","{firstname}","{lastname}","{password}","operator",{school_id});\n'
+    content += f'INSERT INTO {TABLE_NAME} ({",".join(TABLE_COLUMNS)}) VALUES ("{username}","{firstname}","{lastname}","{password}","operator",{school_id},"{birthday}");\n'
 
 ########################### administrator ###########################
 
 
 DUMMY_DATA_NUMBER = 1
 TABLE_NAME = "users"
-TABLE_COLUMNS = ["username", "first_name", "last_name", "password","user_type","school_id"]
+TABLE_COLUMNS = ["username", "first_name", "last_name", "password","user_type","school_id", "birthday"]
 
 
 
@@ -100,8 +103,9 @@ username = "administrator"
 firstname=fake.first_name()
 lastname = fake.last_name()
 x=random.randint(8,30)
+birthday=fake.date()
 password=fake.password(length=x)
-content += f'INSERT INTO {TABLE_NAME} ({",".join(TABLE_COLUMNS)}) VALUES ("{username}","{firstname}","{lastname}","{password}","administrator",NULL);\n'
+content += f'INSERT INTO {TABLE_NAME} ({",".join(TABLE_COLUMNS)}) VALUES ("{username}","{firstname}","{lastname}","{password}","administrator",NULL,"{birthday}");\n'
 
 ########################### books ###########################
 
