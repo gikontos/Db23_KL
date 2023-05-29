@@ -1,6 +1,7 @@
 from flask import Flask,request, render_template,redirect ,url_for,session,send_from_directory
 import MySQLdb
 from flask_mysqldb import MySQL
+from datetime import datetime, timedelta
 app = Flask(__name__)
 app.secret_key = 'any random string'
 
@@ -125,17 +126,34 @@ def user_page(arguement):
             writer_check="and CONCAT(writers.first_name,\" \",writers.last_name) LIKE %s"  
             param+=("%%"+writer+"%%",)
         cur = mysql.connection.cursor()
-        cur.execute("select distinct title,isbn from users join borrowings on username=user_id join books on book_id=isbn join category_book on category_book.book_id=isbn join categories on category_book.category_id=categories.id join book_writer on book_writer.book_id=isbn join writers on writers.id=book_writer.writer_id where users.username=%s "+title_check+category_check+writer_check,param)
+        cur.execute("select distinct title,isbn,returned,borrow_date from users join borrowings on username=user_id join books on book_id=isbn join category_book on category_book.book_id=isbn join categories on category_book.category_id=categories.id join book_writer on book_writer.book_id=isbn join writers on writers.id=book_writer.writer_id where users.username=%s "+title_check+category_check+writer_check,param)
         result=cur.fetchall()
         borrowed_titles = [row[0] for row in result]
         borrowed_isbns = [row[1] for row in result]
+        borrowed_status=[row[2] for row in result]
+        date=[row[3] for row in result]
+        titles=[]
+        borrowed_text=[]
+        for i in range(len(borrowed_status)):
+            if borrowed_status[i]:
+                borrowed_text.append("returned")
+                titles.append("borrowed on "+str(date[i].date()))
+            else:
+                borrowed_text.append("ongoing")
+                endson=date[i].date()+timedelta(days=7)
+                titles.append("return by "+str(endson))
         session["borrowed_titles"]=borrowed_titles
         session["borrowed_isbns"]=borrowed_isbns
+        session["borrowed_text"]=borrowed_text
+        session["titles"]=titles
         available_titles = session["available_titles"]
         available_isbns=session["available_isbns"]
+        reservation_titles=session["reservation_titles"]
+        reservation_isbns=session["reservation_isbns"]
+        reservation_date=session["reservation_date"]
              
         cur.close()
-        return render_template("user_dashboard.html",username=arguement,available_books=available_titles,borrowed_books=borrowed_titles,writer2=writer,category2=category,title2=title,title1=title1,category1=category1,writer1=writer1,available_isbns=available_isbns) 
+        return render_template("user_dashboard.html",username=arguement,available_books=available_titles,borrowed_books=borrowed_titles,writer2=writer,category2=category,title2=title,title1=title1,category1=category1,writer1=writer1,available_isbns=available_isbns,status=borrowed_text,titles=titles,reservation_date=reservation_date,reservations=reservation_titles,reservation_isbns=reservation_isbns) 
     if "form1" in request.form:
         arguement=session["user"]
         writer_check=''
@@ -175,9 +193,14 @@ def user_page(arguement):
         available_isbns = [row[1] for row in result]
         session["available_isbns"]=available_isbns
         borrowed_titles = session["borrowed_titles"]
+        borrowed_text = session["borrowed_text"]
+        titles = session["titles"]
+        reservation_titles=session["reservation_titles"]
+        reservation_isbns=session["reservation_isbns"]
+        reservation_date=session["reservation_date"]
         
         cur.close()
-        return render_template("user_dashboard.html",username=arguement,available_books=available_titles,borrowed_books=borrowed_titles,writer1=writer,category1=category,title1=title,title2=title2,category2=category2,writer2=writer2,available_isbns=available_isbns) 
+        return render_template("user_dashboard.html",username=arguement,available_books=available_titles,borrowed_books=borrowed_titles,writer1=writer,category1=category,title1=title,title2=title2,category2=category2,writer2=writer2,available_isbns=available_isbns,status=borrowed_text,titles=titles,reservation_date=reservation_date,reservations=reservation_titles,reservation_isbns=reservation_isbns) 
       
      
     cur = mysql.connection.cursor()
@@ -185,14 +208,38 @@ def user_page(arguement):
     result = cur.fetchall()
     available_titles = [row[0] for row in result]
     available_isbns = [row[1] for row in result]
-    cur.execute("select distinct title,isbn from users join borrowings on user_id=username join books on book_id=isbn where username=%s",(arguement,))
+    cur.execute("select distinct title,isbn,returned,borrow_date from users join borrowings on user_id=username join books on book_id=isbn where username=%s",(arguement,))
     result = cur.fetchall()
     borrowed_titles = [row[0] for row in result]
     borrowed_isbns = [row[1] for row in result]
+    borrowed_status=[row[2] for row in result]
+    date=[row[3] for row in result]
+    titles=[]
+    borrowed_text=[]
+    for i in range(len(borrowed_status)):
+         if borrowed_status[i]:
+              borrowed_text.append("returned")
+              titles.append("borrowed on "+str(date[i].date()))
+         else:
+              borrowed_text.append("ongoing")
+              endson=date[i].date()+timedelta(days=7)
+              titles.append("return by "+str(endson))
+    cur.execute("select title,reservation_date,isbn from users join reservations on username=user_id join books on book_id=isbn where username=%s",(arguement,))
+    result=cur.fetchall()
+    reservation_titles=[row[0] for row in result]
+    reservation_date=[str(row[1]) for row in result]
+    reservation_isbns=[row[2] for row in result]
+
     session["borrowed_titles"]=borrowed_titles
     session["available_titles"]=available_titles
     session["borrowed_isbns"]=borrowed_isbns
     session["available_isbns"]=available_isbns
+    session["borrowed_text"]=borrowed_text
+    session["titles"]=titles
+    session["reservation_titles"]=reservation_titles
+    session["reservation_isbns"]=reservation_isbns
+    session["reservation_date"]=reservation_date
+    
     session["writer1"]=""
     session["title1"]=""
     session["category1"]=""
@@ -201,10 +248,31 @@ def user_page(arguement):
     session["category2"]=""
     cur.close()
     
-    return render_template("user_dashboard.html",username=arguement,available_books=available_titles,borrowed_books=borrowed_titles,available_isbns=available_isbns)
+    return render_template("user_dashboard.html",username=arguement,available_books=available_titles,borrowed_books=borrowed_titles,available_isbns=available_isbns,status = borrowed_text, titles=titles,reservation_date=reservation_date,reservations=reservation_titles,reservation_isbns=reservation_isbns)
 
 
-
+@app.route('/admin/insert_school', methods=["GET","POST"])
+def insert_school():
+    if not session.get('administrator'):
+        session.pop('administrator', None)
+        return redirect('/')
+    if "register" in request.form:
+        try:
+            name=request.form.get("name")
+            city=request.form.get("city")
+            address=request.form.get("address")
+            pfn=request.form.get("principal_fn")
+            pln=request.form.get("principal_ln")
+            email=request.form.get("email")
+            phone=request.form.get("phone")
+            cur=mysql.connection.cursor()
+            cur.execute("insert into schools (school_name,principal_first_name,principal_last_name,city,address,email,phone) values (%s,%s,%s,%s,%s,%s,%s)",(name,pfn,pln,city,address,email,phone))
+            mysql.connection.commit()
+        except MySQLdb.IntegrityError as e:
+    
+            error_message = str(e)
+            return error_message
+    return render_template("insert_school.html")
 
 @app.route('/admin', methods=["GET","POST"])
 def admin_dashboard():
@@ -213,6 +281,96 @@ def admin_dashboard():
             return redirect('/')
         return render_template("administrator_dashboard.html")
 
+@app.route('/admin/operator_requests', methods=["GET","POST"])
+def operator_requests():
+    cur=mysql.connection.cursor()
+    if not session.get('administrator'):
+            session.pop('administrator', None)
+            return redirect('/')
+    if "reject" in request.form:
+        result=session["result"]
+        a=request.form.get("reject")
+        operator=result[int(a)]
+        
+        
+        date_obj = datetime.strptime(operator[4], "%a, %d %b %Y %H:%M:%S %Z")
+        date = date_obj.strftime("%Y-%m-%d")
+        
+        
+        cur.execute("delete from register_requests where first_name=%s and last_name=%s and user_type=%s and school_id=%s",(operator[1],operator[2],"operator",operator[5]))
+        mysql.connection.commit()
+        cur.execute("select username,first_name,last_name,school_name,birthday,register_requests.school_id, password from register_requests join schools on register_requests.school_id=schools.school_id")
+        result=cur.fetchall()
+        session["result"]=result
+        
+        return render_template("operator_requests.html",result=result)
+
+
+    if "approve" in request.form:
+        result=session["result"]
+        a=request.form.get("approve")
+        operator=result[int(a)]
+        cur.execute("select count(username) from users where school_id=%s and user_type=%s",(operator[5],"operator"))
+        result=cur.fetchone()[0]
+        
+        date_obj = datetime.strptime(operator[4], "%a, %d %b %Y %H:%M:%S %Z")
+        date = date_obj.strftime("%Y-%m-%d")
+        
+        
+        if result==1:
+            return "there is already an operator for this school"
+        
+
+        cur.execute("insert into users (username, first_name,last_name,password,user_type,school_id,birthday) values (%s,%s,%s,%s,%s,%s,%s)",(operator[0],operator[1],operator[2],operator[6],"operator",operator[5],date))
+        cur.execute("delete from register_requests where first_name=%s and last_name=%s and user_type=%s and school_id=%s",(operator[1],operator[2],"operator",operator[5]))
+        mysql.connection.commit()
+        cur.execute("select username,first_name,last_name,school_name,birthday,register_requests.school_id, password from register_requests join schools on register_requests.school_id=schools.school_id")
+        result=cur.fetchall()
+        session["result"]=result
+        
+        return render_template("operator_requests.html",result=result)
+
+    
+    cur.execute("select username,first_name,last_name,school_name,birthday,register_requests.school_id, password from register_requests join schools on register_requests.school_id=schools.school_id")
+    result=cur.fetchall()
+    session["result"]=result
+    usernames=[i[0] for i in result]
+    fnames=[i[1] for i in result]
+    lnames=[i[2] for i in result]
+    sids=[i[3] for i in result]
+    birthdays=[i[4] for i in result]
+    snames=[i[5] for i in result]
+    return render_template("operator_requests.html",result=result)
+
+@app.route('/register', methods=["GET","POST"])
+def register():
+    cur=mysql.connection.cursor()
+    cur.execute("select school_name,school_id from schools")
+    schools=cur.fetchall()
+    if "register" in request.form:
+        username=request.form.get("username")
+        first_name=request.form.get("first_name")
+        last_name=request.form.get("last_name")
+        password=request.form.get("password")
+        user_type=request.form.get("user_type")
+        school_id=request.form.get("school")
+        date = str(request.form.get("birthday"))
+        
+        
+        
+        cur.execute("select count(username) from users where username=%s",(username,))
+        res=cur.fetchone()
+        if res[0]==1:
+            return "username taken"
+        
+        try:
+            cur.execute("insert into register_requests (username,first_name,last_name,password,user_type,school_id,birthday) values (%s,%s,%s,%s,%s,%s,%s)",(username,first_name,last_name,password,user_type,school_id,date))
+            mysql.connection.commit()
+            return "wait for approval"
+        except: 
+            return "request pending"
+
+    return render_template("register.html",schools=schools)
 @app.route('/operator/<arguement>', methods=["GET", "POST"])
 def operator_dashboard(arguement):
     if not session.get(arguement):
