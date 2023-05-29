@@ -1,0 +1,31 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>List Example</title>
+  <style>
+    .delete-button {
+    float: right; /* Float the sidebar to the right */
+    position: fixed;
+    right: 5vw;
+  }
+  .approve-button {
+    float: right; /* Float the sidebar to the right */
+    position: fixed;
+    right: 10vw;
+}
+</style>
+</head>
+<body>
+  <h1>Operator requests</h1>
+  <ul>
+    {%for i in result%}
+    <li style="margin: 10px;">
+        <form action="/admin/operator_requests" method="POST">
+        Username: {{i[0]}}, First name: {{i[1]}}, Last name:  {{i[2]}}, School: {{i[3]}}, birthday: {{i[4]}}<button type="submit" name="approve" value ="{{result.index(i)}}" class="approve-button">approve</button>
+        <button type="submit" name="reject" value="{{ result.index(i) }}" class="delete-button">reject</button>
+        
+    </form></li>
+    {%endfor%}
+  </ul>
+</body>
+</html>
