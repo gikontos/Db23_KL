@@ -248,7 +248,6 @@ def reviews():
             cur.execute('select likert from reviews join users on reviews.user_id = users.username where users.username = %s',(username,))
             rows = cur.fetchall()
             likert_values = [row[0] for row in rows]
-            print(rows)
             if likert_values:
                 avg = sum(likert_values)/len(likert_values)
             else:
