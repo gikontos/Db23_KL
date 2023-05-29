@@ -213,12 +213,56 @@ def admin_dashboard():
             return redirect('/')
         return render_template("administrator_dashboard.html")
 
-@app.route('/operator/<arguement>', methods=["GET","POST"])
+@app.route('/operator/<arguement>', methods=["GET", "POST"])
 def operator_dashboard(arguement):
     if not session.get(arguement):
-            session.pop(arguement, None)
-            return redirect('/')
+        session.pop(arguement, None)
+        return redirect('/')
+    if request.method == "POST" and "books" in request.form:
+        return redirect('/books')
+    if request.method == "POST" and "users" in request.form:
+        return redirect('/users_handler')
+    if request.method == "POST" and "reviews" in request.form:
+        return redirect('/reviews')
     return render_template("operator_dashboard.html")
+
+@app.route('/books', methods=["GET", "POST"])
+def books():
+    return render_template("books.html")
+
+@app.route('/users_handler', methods=["GET", "POST"])
+def users_handler():
+    return render_template("users2.html")
+
+@app.route('/reviews', methods=["GET", "POST"])
+def reviews():
+    cur = mysql.connection.cursor()
+    avg = None
+    username = None
+    category = None
+    avg2 = None
+    if request.method == "POST":
+        username = request.form.get("username")
+        category = request.form.get("category")
+        if username:
+            cur.execute('select likert from reviews join users on reviews.user_id = users.username where users.username = %s',(username,))
+            rows = cur.fetchall()
+            likert_values = [row[0] for row in rows]
+            print(rows)
+            if likert_values:
+                avg = sum(likert_values)/len(likert_values)
+            else:
+                avg = 0
+        if category:
+            cur.execute('select likert from reviews join books on reviews.book_id = books.isbn join category_book on category_book.book_id = books.isbn join categories on categories.id = category_book.category_id where category_name = %s',(category,))
+            rows = cur.fetchall()
+            likert_values = [row[0] for row in rows]
+            print(rows)
+            if likert_values:
+                avg2 = sum(likert_values) / len(likert_values)
+            else:
+                avg2 = 0
+    return render_template("reviews.html",avg=avg,username=username,category=category,avg2=avg2)
 
 if __name__ == '__main__':
     app.run()
