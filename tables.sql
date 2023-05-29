@@ -31,19 +31,27 @@ CREATE TABLE if not exists users
 	last_name varchar(20) NOT NULL ,
 	password varchar(30) NOT NULL,
 	user_type varchar(20) NOT NULL,
-	school_id int,
+	school_id int ,
+	birthday date not null,
+	unique (first_name,last_name,user_type,school_id) ,
 	FOREIGN KEY (school_id) REFERENCES schools(school_id) ,
 	CHECK (user_type="teacher" OR user_type="student" or user_type="operator" or user_type="administrator")
 );
 
-/* create table if not exists operators(
-	user_id varchar(20),
-	school_id int,
-	FOREIGN key (user_id) references users(username),
-	FOREIGN key (school_id) references schools(school_id),
-	primary key (user_id,school_id)
+create table if not exists register_requests
+(
+	username varchar(20) NOT NULL ,
+	first_name varchar(20) NOT NULL ,
+	last_name varchar(20) NOT NULL ,
+	password varchar(30) NOT NULL,
+	user_type varchar(20) NOT NULL,
+	school_id int not null,
+	birthday date not null,
+	FOREIGN KEY (school_id) REFERENCES schools(school_id),
+	primary key (first_name,last_name,user_type,school_id) 
 );
- */
+
+
 
 CREATE TABLE if not exists books
 (
@@ -57,20 +65,7 @@ CREATE TABLE if not exists books
 );
 
 
-/*
-CREATE TABLE if not exists keywords
-(
-	word varchar(20) NOT NULL PRIMARY KEY
-);*/
 
-/*
-CREATE TABLE if not exists publishers
-(
-	id int AUTO_INCREMENT NOT NULL PRIMARY KEY,
-	first_name varchar(20) NOT NULL,
-	last_name varchar(20)
-);
-*/
 
 CREATE TABLE if not exists  writers
 (
@@ -113,7 +108,7 @@ CREATE TABLE if not exists  schools_books
 	
 	school_id int, 
 	FOREIGN KEY (school_id) REFERENCES schools(school_id),
-	book_id char(13), 
+	book_id varchar(13), 
 	FOREIGN KEY (book_id) REFERENCES books(isbn),
 	primary key (school_id,book_id),
 	no_copies int
@@ -124,7 +119,7 @@ CREATE TABLE if not exists reservations
 (
 	user_id varchar(20),
 	FOREIGN KEY (user_id) REFERENCES users(username),
-	book_id char(13),
+	book_id varchar(13),
 	FOREIGN KEY (book_id) REFERENCES books(isbn),
 	reservation_date datetime default current_timestamp,
 	id int auto_increment primary key	
@@ -145,17 +140,7 @@ CREATE TABLE if not exists borrowings
 
 
 
-/*
-CREATE TABLE if not exists keyword_book
-(
-	
-	book_id char(13),
-	FOREIGN KEY (book_id) REFERENCES books(isbn),
-	keyword varchar(20),
-	FOREIGN KEY (keyword) REFERENCES keywords(word),
-	primary key (book_id,keyword)
-);
-*/
+
 CREATE TABLE IF not exists category_book 
 (
     book_id VARCHAR(13),
@@ -170,7 +155,7 @@ CREATE TABLE IF not exists category_book
 CREATE TABLE if not exists book_writer
 (
 	
-	book_id char(13),
+	book_id varchar(13),
 	FOREIGN KEY (book_id) REFERENCES books(isbn),
 	writer_id int,
 	FOREIGN KEY (writer_id) REFERENCES writers(id),
@@ -178,17 +163,7 @@ CREATE TABLE if not exists book_writer
 	
 );
 
-/*
-CREATE TABLE if not exists book_publisher
-(
-	
-	book_id char(13),
-	FOREIGN KEY (book_id) REFERENCES books(isbn),
-	publisher_id int,
-	FOREIGN KEY (publisher_id) REFERENCES publishers(id),
-	primary key (book_id,publisher_id)
-	
-);*/
+
 
 --delete reservations after a week
 SET GLOBAL event_scheduler = ON;
