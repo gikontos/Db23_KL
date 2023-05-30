@@ -88,10 +88,11 @@ CREATE TABLE if not exists  reviews
 (
 	review_text varchar(500),
 	likert int NOT NULL,
+	published BOOLEAN DEFAULT false,
 	user_id varchar(20) not null,
 	FOREIGN KEY (user_id) references users(username) on delete cascade ,
 	book_id char(13) not null ,
-	FOREIGN KEY (book_id) REFERENCES books(isbn),
+	FOREIGN KEY (book_id) REFERENCES books(isbn) on delete cascade,
 	primary key (book_id,user_id),
 	CHECK (likert>=1 AND likert<=5)
 );
@@ -109,7 +110,7 @@ CREATE TABLE if not exists  schools_books
 	school_id int, 
 	FOREIGN KEY (school_id) REFERENCES schools(school_id) on delete cascade,
 	book_id varchar(13), 
-	FOREIGN KEY (book_id) REFERENCES books(isbn),
+	FOREIGN KEY (book_id) REFERENCES books(isbn) on delete cascade,
 	primary key (school_id,book_id),
 	no_copies int
 );
@@ -120,7 +121,7 @@ CREATE TABLE if not exists reservations
 	user_id varchar(20),
 	FOREIGN KEY (user_id) REFERENCES users(username) on delete cascade,
 	book_id varchar(13),
-	FOREIGN KEY (book_id) REFERENCES books(isbn),
+	FOREIGN KEY (book_id) REFERENCES books(isbn) on delete cascade,
 	reservation_date datetime default current_timestamp,
 	id int auto_increment primary key	
 );
@@ -130,7 +131,7 @@ CREATE TABLE if not exists borrowings
 	user_id varchar(20),
 	FOREIGN KEY (user_id) REFERENCES users(username) on delete cascade,
 	book_id varchar(13),
-	FOREIGN KEY (book_id) REFERENCES books(isbn),
+	FOREIGN KEY (book_id) REFERENCES books(isbn) on delete cascade,
 	borrow_date datetime default current_timestamp,
 	id int auto_increment primary key ,
 	duration_in_days int not null,
