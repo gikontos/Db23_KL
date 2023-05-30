@@ -436,13 +436,35 @@ def users_handler():
             first_names_len = len(first_names)
         requests = request.form.get("requests")
         if requests:
-            return redirect("/users_handler/users_requests")
+            url = url_for('/users_handler/users_requests',sid=sid)
+            return redirect(url)
+        edit_users = request.form.get("edit_users")
+        if edit_users:
+            url = url_for('/users_handler/edit_users',sid=sid)
+            return redirect(url)
 
     return render_template("users2.html",last_names=last_names,first_names=first_names,days_of_delay=days_of_delay,first_names_len=first_names_len,arguement=arguement,sid=sid)
 
+@app.route('/users_handler/edit_users', methods=["GET","POST"])
+def edit_users():
+    sid = request.args.get('sid')
+    if request.method == "POST":
+        cur = mysql.connection.cursor()
+        cur.execute('select username,first_name,last_name from users where users.user_type = "student" and users.school_id = %s',(sid,))
+        users = cur.fetchall()
+        d = request.form.get("delete")
+        user = request.form.get("user")
+        if d:
+            cur2 = mysql.connection.cursor()
+            cur2.execute('delete from users where username = %s',(user,))
+    return render_template("edit_users.html", sid=sid,users=users)
 @app.route('/users_handler/users_requests', methods=["GET","POST"])
 def users_requests():
-    return render_template("user_request.html")
+    sid = request.args.get('sid')
+    #if request.method == "POST":
+        #cur = mysql.connection.cursor()
+        #cur.execute('select username,first_name,last_name from register_requests where user_type = "user" and register_requests.school_id = %s',(sid,))
+    return render_template("user_request.html",sid=sid)
 
 
 @app.route('/reviews', methods=["GET", "POST"])
@@ -475,3 +497,4 @@ def reviews():
 
 if __name__ == '__main__':
     app.run()
+
