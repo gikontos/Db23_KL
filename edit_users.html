@@ -1,0 +1,32 @@
+<!-- edit_users.html -->
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Edit Users</title>
+</head>
+<body>
+    <h1>Edit Users</h1>
+    <table>
+        <tr>
+            <th>Username</th>
+            <th>First Name</th>
+            <th>Last Name</th>
+            <th>Action</th>
+        </tr>
+        {% for user in users %}
+        <tr>
+            <td>{{ user[0] }}</td>
+            <td>{{ user[1] }}</td>
+            <td>{{ user[2] }}</td>
+            <td>
+                <form method="POST" action="{{ url_for('edit_users', sid=sid) }}">
+                    <input type="hidden" name="user" value="{{ user[0] }}">
+                    <input type="submit" name="delete" value="Delete">
+                </form>
+            </td>
+        </tr>
+        {% endfor %}
+    </table>
+</body>
+</html>
+
