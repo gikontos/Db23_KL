@@ -390,7 +390,52 @@ def books():
 
 @app.route('/users_handler', methods=["GET", "POST"])
 def users_handler():
-    return render_template("users2.html")
+    first_names = None
+    last_names = None
+    days_of_delay = None
+    first_names_len = 0
+    if request.method == "POST":
+        cur = mysql.connection.cursor()
+        current_date = datetime.now().date()
+        cur.execute('select first_name,last_name,borrow_date from users join borrowings on users.username = borrowings.user_id where users.user_type = "student" and borrowings.returned = False and DATEDIFF(current_date,borrowings.borrow_date) >= 7')
+        result = cur.fetchall();
+        first_names = [row[0] for row in result]
+        last_names = [row[1] for row in result]
+        days_of_delay = [(current_date-row[2].date()).days for row in result]
+        first_names_len = len(first_names)
+        search_first_name = request.form.get('first_name')
+        search_last_name = request.form.get('last_name')
+        search_days_of_delay = request.form.get('days_of_delay')
+        if search_first_name:
+            cur.execute('select first_name,last_name,borrow_date from users join borrowings on users.username = borrowings.user_id where users.user_type = "student" and borrowings.returned = False and DATEDIFF(current_date,borrowings.borrow_date) >= 7 and users.first_name = %s',(search_first_name,))
+            result2 = cur.fetchall();
+            first_names = [row[0] for row in result2]
+            last_names = [row[1] for row in result2]
+            days_of_delay = [(current_date - row[2].date()).days for row in result2]
+            first_names_len = len(first_names)
+        if search_last_name:
+            cur.execute('select first_name,last_name,borrow_date from users join borrowings on users.username = borrowings.user_id where users.user_type = "student" and borrowings.returned = False and DATEDIFF(current_date,borrowings.borrow_date) >= 7 and users.last_name = %s', (search_last_name,))
+            result3 = cur.fetchall();
+            first_names = [row[0] for row in result3]
+            last_names = [row[1] for row in result3]
+            days_of_delay = [(current_date - row[2].date()).days for row in result3]
+            first_names_len = len(first_names)
+        if search_days_of_delay:
+            cur.execute('select first_name,last_name,borrow_date from users join borrowings on users.username = borrowings.user_id where users.user_type = "student" and borrowings.returned = False and DATEDIFF(current_date,borrowings.borrow_date) = %s',(search_days_of_delay,))
+            result4 = cur.fetchall();
+            first_names = [row[0] for row in result4]
+            last_names = [row[1] for row in result4]
+            days_of_delay = [(current_date - row[2].date()).days for row in result4]
+            first_names_len = len(first_names)
+        requests = request.form.get("requests")
+        if requests:
+            return redirect("/users_handler/users_requests")
+
+    return render_template("users2.html",last_names=last_names,first_names=first_names,days_of_delay=days_of_delay,first_names_len=first_names_len)
+
+@app.route('/users_handler/users_requests', methods=["GET","POST"])
+def users_requests():
+    return render_template("user_request.html")
 
 @app.route('/reviews', methods=["GET", "POST"])
 def reviews():
