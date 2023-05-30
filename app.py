@@ -379,10 +379,11 @@ def operator_dashboard(arguement):
     if request.method == "POST" and "books" in request.form:
         return redirect('/books')
     if request.method == "POST" and "users" in request.form:
-        return redirect('/users_handler')
+        url = url_for('users_handler',arguement=arguement)
+        return redirect(url)
     if request.method == "POST" and "reviews" in request.form:
         return redirect('/reviews')
-    return render_template("operator_dashboard.html")
+    return render_template("operator_dashboard.html",arguement=arguement)
 
 @app.route('/books', methods=["GET", "POST"])
 def books():
@@ -390,14 +391,20 @@ def books():
 
 @app.route('/users_handler', methods=["GET", "POST"])
 def users_handler():
+    arguement = request.args.get('arguement')
     first_names = None
     last_names = None
     days_of_delay = None
+    sid = None
     first_names_len = 0
     if request.method == "POST":
         cur = mysql.connection.cursor()
+        cur2 = mysql.connection.cursor()
         current_date = datetime.now().date()
-        cur.execute('select first_name,last_name,borrow_date from users join borrowings on users.username = borrowings.user_id where users.user_type = "student" and borrowings.returned = False and DATEDIFF(current_date,borrowings.borrow_date) >= 7')
+        cur2.execute('select school_id from users where users.username = %s',(arguement,))
+        res = cur2.fetchall();
+        sid = [r[0] for r in res]
+        cur.execute('select first_name,last_name,borrow_date from users join borrowings on users.username = borrowings.user_id where users.user_type = "student" and borrowings.returned = False and DATEDIFF(current_date,borrowings.borrow_date) >= 7 and users.school_id = %s',(sid,))
         result = cur.fetchall();
         first_names = [row[0] for row in result]
         last_names = [row[1] for row in result]
@@ -407,21 +414,21 @@ def users_handler():
         search_last_name = request.form.get('last_name')
         search_days_of_delay = request.form.get('days_of_delay')
         if search_first_name:
-            cur.execute('select first_name,last_name,borrow_date from users join borrowings on users.username = borrowings.user_id where users.user_type = "student" and borrowings.returned = False and DATEDIFF(current_date,borrowings.borrow_date) >= 7 and users.first_name = %s',(search_first_name,))
+            cur.execute('select first_name,last_name,borrow_date from users join borrowings on users.username = borrowings.user_id where users.user_type = "student" and borrowings.returned = False and DATEDIFF(current_date,borrowings.borrow_date) >= 7 and users.first_name = %s and users.school_id = %s',(search_first_name,sid,))
             result2 = cur.fetchall();
             first_names = [row[0] for row in result2]
             last_names = [row[1] for row in result2]
             days_of_delay = [(current_date - row[2].date()).days for row in result2]
             first_names_len = len(first_names)
         if search_last_name:
-            cur.execute('select first_name,last_name,borrow_date from users join borrowings on users.username = borrowings.user_id where users.user_type = "student" and borrowings.returned = False and DATEDIFF(current_date,borrowings.borrow_date) >= 7 and users.last_name = %s', (search_last_name,))
+            cur.execute('select first_name,last_name,borrow_date from users join borrowings on users.username = borrowings.user_id where users.user_type = "student" and borrowings.returned = False and DATEDIFF(current_date,borrowings.borrow_date) >= 7 and users.last_name = %s and users.school_id = %s', (search_last_name,sid,))
             result3 = cur.fetchall();
             first_names = [row[0] for row in result3]
             last_names = [row[1] for row in result3]
             days_of_delay = [(current_date - row[2].date()).days for row in result3]
             first_names_len = len(first_names)
         if search_days_of_delay:
-            cur.execute('select first_name,last_name,borrow_date from users join borrowings on users.username = borrowings.user_id where users.user_type = "student" and borrowings.returned = False and DATEDIFF(current_date,borrowings.borrow_date) = %s',(search_days_of_delay,))
+            cur.execute('select first_name,last_name,borrow_date from users join borrowings on users.username = borrowings.user_id where users.user_type = "student" and borrowings.returned = False and DATEDIFF(current_date,borrowings.borrow_date) = %s and users.school_id = %s',(search_days_of_delay,sid,))
             result4 = cur.fetchall();
             first_names = [row[0] for row in result4]
             last_names = [row[1] for row in result4]
@@ -431,11 +438,12 @@ def users_handler():
         if requests:
             return redirect("/users_handler/users_requests")
 
-    return render_template("users2.html",last_names=last_names,first_names=first_names,days_of_delay=days_of_delay,first_names_len=first_names_len)
+    return render_template("users2.html",last_names=last_names,first_names=first_names,days_of_delay=days_of_delay,first_names_len=first_names_len,arguement=arguement,sid=sid)
 
 @app.route('/users_handler/users_requests', methods=["GET","POST"])
 def users_requests():
     return render_template("user_request.html")
+
 
 @app.route('/reviews', methods=["GET", "POST"])
 def reviews():
@@ -459,7 +467,6 @@ def reviews():
             cur.execute('select likert from reviews join books on reviews.book_id = books.isbn join category_book on category_book.book_id = books.isbn join categories on categories.id = category_book.category_id where category_name = %s',(category,))
             rows = cur.fetchall()
             likert_values = [row[0] for row in rows]
-            print(rows)
             if likert_values:
                 avg2 = sum(likert_values) / len(likert_values)
             else:
