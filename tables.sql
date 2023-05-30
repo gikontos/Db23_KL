@@ -34,7 +34,7 @@ CREATE TABLE if not exists users
 	school_id int ,
 	birthday date not null,
 	unique (first_name,last_name,user_type,school_id) ,
-	FOREIGN KEY (school_id) REFERENCES schools(school_id) ,
+	FOREIGN KEY (school_id) REFERENCES schools(school_id) on delete cascade,
 	CHECK (user_type="teacher" OR user_type="student" or user_type="operator" or user_type="administrator")
 );
 
@@ -47,7 +47,7 @@ create table if not exists register_requests
 	user_type varchar(20) NOT NULL,
 	school_id int not null,
 	birthday date not null,
-	FOREIGN KEY (school_id) REFERENCES schools(school_id),
+	FOREIGN KEY (school_id) REFERENCES schools(school_id) on delete cascade,
 	primary key (first_name,last_name,user_type,school_id) 
 );
 
@@ -89,7 +89,7 @@ CREATE TABLE if not exists  reviews
 	review_text varchar(500),
 	likert int NOT NULL,
 	user_id varchar(20) not null,
-	FOREIGN KEY (user_id) references users(username) ,
+	FOREIGN KEY (user_id) references users(username) on delete cascade ,
 	book_id char(13) not null ,
 	FOREIGN KEY (book_id) REFERENCES books(isbn),
 	primary key (book_id,user_id),
@@ -107,7 +107,7 @@ CREATE TABLE if not exists  schools_books
 (
 	
 	school_id int, 
-	FOREIGN KEY (school_id) REFERENCES schools(school_id),
+	FOREIGN KEY (school_id) REFERENCES schools(school_id) on delete cascade,
 	book_id varchar(13), 
 	FOREIGN KEY (book_id) REFERENCES books(isbn),
 	primary key (school_id,book_id),
@@ -118,7 +118,7 @@ CREATE TABLE if not exists  schools_books
 CREATE TABLE if not exists reservations
 (
 	user_id varchar(20),
-	FOREIGN KEY (user_id) REFERENCES users(username),
+	FOREIGN KEY (user_id) REFERENCES users(username) on delete cascade,
 	book_id varchar(13),
 	FOREIGN KEY (book_id) REFERENCES books(isbn),
 	reservation_date datetime default current_timestamp,
@@ -128,7 +128,7 @@ CREATE TABLE if not exists reservations
 CREATE TABLE if not exists borrowings
 (
 	user_id varchar(20),
-	FOREIGN KEY (user_id) REFERENCES users(username),
+	FOREIGN KEY (user_id) REFERENCES users(username) on delete cascade,
 	book_id varchar(13),
 	FOREIGN KEY (book_id) REFERENCES books(isbn),
 	borrow_date datetime default current_timestamp,
@@ -311,7 +311,7 @@ BEGIN
   ) INTO flag_value;
   
   -- If there is a matching row, raise an error
-  IF flag_value = TRUE THEN
+  IF flag_value = TRUE and new.user_type="operator" THEN
     SIGNAL SQLSTATE '45000'
       SET MESSAGE_TEXT = 'Cannot insert. There is already an operator for this school.';
   END IF;
