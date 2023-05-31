@@ -448,17 +448,19 @@ def users_handler():
 @app.route('/users_handler/edit_users', methods=["GET","POST"])
 def edit_users():
     sid = request.args.get('sid')
+    cur = mysql.connection.cursor()
+    cur.execute('select username,first_name,last_name,user_type from users where users.user_type != "operator" and users.school_id = %s',(sid,))
+    users = cur.fetchall()
     if request.method == "POST":
-        cur = mysql.connection.cursor()
-        cur.execute('select username,first_name,last_name from users where users.user_type = "student" and users.school_id = %s',(sid,))
-        users = cur.fetchall()
         d = request.form.get("delete")
         user = request.form.get("user")
         if d:
             cur2 = mysql.connection.cursor()
             cur2.execute('delete from users where username = %s',(user,))
+            mysql.connection.commit()
+            return redirect(url_for('edit_users',sid=sid))
     return render_template("edit_users.html", sid=sid,users=users)
-@app.route('/users_handler/users_requests', methods=["GET","POST"])
+
 def users_requests():
     sid = request.args.get('sid')
     #if request.method == "POST":
