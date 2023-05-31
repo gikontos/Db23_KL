@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <html>
 <head>
-  <title>List Example</title>
+  <title>operator requests</title>
   <style>
     .delete-button {
     float: right; /* Float the sidebar to the right */
@@ -13,18 +13,48 @@
     position: fixed;
     right: 10vw;
 }
-</style>
+
+    table {
+      border-collapse: collapse;
+    }
+  
+    th, td {
+      border: 1px solid black;
+      padding: 8px;
+    }
+  </style>
 </head>
 <body>
   <h1>Operator requests</h1>
+  <table>
+    <tr>
+      
+      
+      <th>Username</th>
+      <th>First name</th>
+      <th>Last name</th>
+      <th>School</th>
+      <th>birthday</th>
+      
+    </tr>
   <ul>
     {%for i in result%}
-    <li style="margin: 10px;">
-        <form action="/admin/operator_requests" method="POST">
-        Username: {{i[0]}}, First name: {{i[1]}}, Last name:  {{i[2]}}, School: {{i[3]}}, birthday: {{i[4]}}<button type="submit" name="approve" value ="{{result.index(i)}}" class="approve-button">approve</button>
-        <button type="submit" name="reject" value="{{ result.index(i) }}" class="delete-button">reject</button>
+    <tr>
+      <td>{{i[0]}}</td>
+      
+      <td>{{i[1]}}</td>
+      <td>{{i[2]}}</td>
+      <td>{{i[3]}}</td>
+      <td>{{i[4]}}</td>
+      <td><form action="/admin/operator_requests" method="POST">
+        <button type="submit" name="approve" value ="{{result.index(i)}}" >approve</button>
+        <button type="submit" name="reject" value="{{ result.index(i) }}" >reject</button>
         
-    </form></li>
+    </form></td>
+      
+          
+    </tr>
+        
     {%endfor%}
   </ul>
 </body>
