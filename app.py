@@ -774,8 +774,9 @@ def reviews():
     if request.method == "POST":
         username = request.form.get("username")
         category = request.form.get("category")
+        requests = request.form.get("requests")
         if username:
-            cur.execute('select likert from reviews join users on reviews.user_id = users.username where users.username = %s',(username,))
+            cur.execute('select likert from reviews join users on reviews.user_id = users.username where reviews.published = TRUE and users.username = %s',(username,))
             rows = cur.fetchall()
             likert_values = [row[0] for row in rows]
             if likert_values:
@@ -783,14 +784,39 @@ def reviews():
             else:
                 avg = 0
         if category:
-            cur.execute('select likert from reviews join books on reviews.book_id = books.isbn join category_book on category_book.book_id = books.isbn join categories on categories.id = category_book.category_id where category_name = %s',(category,))
+            cur.execute('select likert from reviews join books on reviews.book_id = books.isbn join category_book on category_book.book_id = books.isbn join categories on categories.id = category_book.category_id where reviews.published = TRUE and category_name = %s',(category,))
             rows = cur.fetchall()
             likert_values = [row[0] for row in rows]
             if likert_values:
                 avg2 = sum(likert_values) / len(likert_values)
             else:
                 avg2 = 0
+        if requests:
+            return redirect(url_for('/reviews/reviews_requests'))
+
     return render_template("reviews.html",avg=avg,username=username,category=category,avg2=avg2)
+
+@app.route('/reviews/reviews_requests', methods=["GET","POST"])
+def reviews_requests():
+    cur = mysql.connection.cursor()
+    cur.execute('select review_text,likert,username,title,isbn from reviews join users on users.username = reviews.user_id join books on books.isbn = reviews.book_id where reviews.published = FALSE')
+    reviews = cur.fetchall()
+    if request.method == "POST":
+        approve = request.form.get("approve")
+        user = request.form.get("user")
+        book = request.form.get("book")
+        reject = request.form.get("reject")
+        if approve:
+            cur2 = mysql.connection.cursor()
+            cur2.execute('update reviews set published = TRUE where user_id = %s and book_id = %s',(user,book,))
+            mysql.connection.commit()
+            return redirect(url_for('reviews_requests'))
+        if reject:
+            cur2 = mysql.connection.cursor()
+            cur2.execute('delete from reviews where user_id = %s and book_id = %s',(user,book,))
+            mysql.connection.commit()
+            return redirect(url_for('reviews_requests'))
+    return render_template("review_request.html",reviews=reviews)
 
 if __name__ == '__main__':
     app.run()
