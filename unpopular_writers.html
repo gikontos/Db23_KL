@@ -1,0 +1,48 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>unpopular writers page</title>
+
+<style>
+    table {
+      border-collapse: collapse;
+    }
+  
+    th, td {
+      border: 1px solid black;
+      padding: 8px;
+    }
+  </style>
+  </head>
+  <body><div >
+  <div style="max-width: 30vw;">Writers who have none of their books borrowed:</div>
+  <table>
+    <tr>
+      
+      
+      <th>first name</th>
+      <th>last name</th>
+      
+      
+      
+    </tr>
+    
+    
+    {%for i in data%}
+    <tr>
+        <td>{{i[0]}}</td>
+        
+        <td>{{i[1]}}</td>
+            
+      </tr>
+      
+
+       
+    {% endfor %}  
+
+
+    
+  </table>
+</div>
+</body>
+</html>
