@@ -473,7 +473,6 @@ def edit_users():
             return redirect(url_for('edit_users', sid=sid))
     return render_template("edit_users.html", sid=sid,users=users)
 
-
 @app.route('/users_handler/users_requests', methods=["GET","POST"])
 def users_requests():
     sid = request.args.get('sid')
@@ -483,6 +482,7 @@ def users_requests():
     if request.method == "POST":
         approve = request.form.get("approve")
         user = request.form.get("user")
+        reject = request.form.get("reject")
         if approve:
             cur2 = mysql.connection.cursor()
             cur3 = mysql.connection.cursor()
@@ -492,9 +492,20 @@ def users_requests():
                 cur2.execute('insert into users (username,first_name,last_name,password,user_type,school_id,birthday) values (%s,%s,%s,%s,%s,%s,%s)',(info[0],info[1],info[2],info[3],info[4],info[5],info[6]))
                 cur2.execute('delete from register_requests where username = %s and first_name = %s',(info[0],info[1]))
                 mysql.connection.commit()
+                return redirect(url_for('card', username=info[0]))
+        if reject:
+            cur2 = mysql.connection.cursor()
+            cur2.execute('delete from register_requests where username = %s',(user,))
+            mysql.connection.commit()
             return redirect(url_for('users_requests', sid=sid))
     return render_template("user_request.html",sid=sid,users=users)
 
+@app.route('/card/<username>', methods=["GET", "POST"])
+def card(username):
+    cur = mysql.connection.cursor()
+    cur.execute('select username,first_name,last_name,user_type,school_name from users join schools on users.school_id = schools.school_id where username = %s',(username,))
+    result = cur.fetchone()
+    return render_template("card.html",username=username,first_name=result[1],last_name=result[2],user_type=result[3],school_name=result[4])
 
 @app.route('/reviews', methods=["GET", "POST"])
 def reviews():
