@@ -32,6 +32,7 @@ CREATE TABLE if not exists users
 	password varchar(30) NOT NULL,
 	user_type varchar(20) NOT NULL,
 	school_id int ,
+	enabled BOOLEAN DEFAULT true,
 	birthday date not null,
 	unique (first_name,last_name,user_type,school_id) ,
 	FOREIGN KEY (school_id) REFERENCES schools(school_id) on delete cascade,
