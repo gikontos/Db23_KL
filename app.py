@@ -449,17 +449,30 @@ def users_handler():
 def edit_users():
     sid = request.args.get('sid')
     cur = mysql.connection.cursor()
-    cur.execute('select username,first_name,last_name,user_type from users where users.user_type != "operator" and users.school_id = %s',(sid,))
+    cur.execute('select username,first_name,last_name,user_type,enabled from users where users.user_type != "operator" and users.school_id = %s',(sid,))
     users = cur.fetchall()
     if request.method == "POST":
         d = request.form.get("delete")
         user = request.form.get("user")
+        disable = request.form.get("disable")
+        enable = request.form.get("enable")
         if d:
             cur2 = mysql.connection.cursor()
             cur2.execute('delete from users where username = %s',(user,))
             mysql.connection.commit()
             return redirect(url_for('edit_users',sid=sid))
+        if disable:
+            cur3 = mysql.connection.cursor()
+            cur3.execute('update users set enabled = FALSE where username = %s',(user,))
+            mysql.connection.commit()
+            return redirect(url_for('edit_users', sid=sid))
+        if enable:
+            cur3 = mysql.connection.cursor()
+            cur3.execute('update users set enabled = TRUE where username = %s', (user,))
+            mysql.connection.commit()
+            return redirect(url_for('edit_users', sid=sid))
     return render_template("edit_users.html", sid=sid,users=users)
+
 
 @app.route('/users_handler/users_requests', methods=["GET","POST"])
 def users_requests():
