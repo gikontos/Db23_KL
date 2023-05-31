@@ -461,12 +461,26 @@ def edit_users():
             return redirect(url_for('edit_users',sid=sid))
     return render_template("edit_users.html", sid=sid,users=users)
 
+@app.route('/users_handler/users_requests', methods=["GET","POST"])
 def users_requests():
     sid = request.args.get('sid')
-    #if request.method == "POST":
-        #cur = mysql.connection.cursor()
-        #cur.execute('select username,first_name,last_name from register_requests where user_type = "user" and register_requests.school_id = %s',(sid,))
-    return render_template("user_request.html",sid=sid)
+    cur = mysql.connection.cursor()
+    cur.execute('select username,first_name,last_name,user_type from register_requests where user_type != "operator" and register_requests.school_id = %s',(sid,))
+    users = cur.fetchall()
+    if request.method == "POST":
+        approve = request.form.get("approve")
+        user = request.form.get("user")
+        if approve:
+            cur2 = mysql.connection.cursor()
+            cur3 = mysql.connection.cursor()
+            cur3.execute('select * from register_requests where register_requests.username = %s',(user,))
+            info = cur3.fetchone()
+            if info:
+                cur2.execute('insert into users (username,first_name,last_name,password,user_type,school_id,birthday) values (%s,%s,%s,%s,%s,%s,%s)',(info[0],info[1],info[2],info[3],info[4],info[5],info[6]))
+                cur2.execute('delete from register_requests where username = %s and first_name = %s',(info[0],info[1]))
+                mysql.connection.commit()
+            return redirect(url_for('users_requests', sid=sid))
+    return render_template("user_request.html",sid=sid,users=users)
 
 
 @app.route('/reviews', methods=["GET", "POST"])
