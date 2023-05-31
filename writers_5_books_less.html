@@ -1,0 +1,51 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>unpopular writers page</title>
+
+<style>
+    table {
+      border-collapse: collapse;
+    }
+  
+    th, td {
+      border: 1px solid black;
+      padding: 8px;
+    }
+  </style>
+  </head>
+  <body><div >
+  <div style="max-width: 30vw;">Writers who have writen at least five books less than {{data[0][0]}} {{data[0][1]}} who has writen {{data[0][2]}}:</div>
+  <table>
+    <tr>
+      
+      
+      <th>first name</th>
+      <th>last name</th>
+      <th>books writen</th>
+      
+      
+    </tr>
+    
+    
+    {%for i in data%}
+        {% if (i[2]<data[0][2]-4) %}
+        <tr>
+        <td>{{i[0]}}</td>
+        
+        <td>{{i[1]}}</td>
+        <td>{{i[2]}}</td>
+            
+      </tr>
+        {%endif%} 
+      
+
+       
+    {% endfor %}  
+
+
+    
+  </table>
+</div>
+</body>
+</html>
