@@ -760,7 +760,8 @@ def operator_dashboard(arguement):
         session.pop(arguement, None)
         return redirect('/')
     if request.method == "POST" and "books" in request.form:
-        return redirect('/books')
+        url = url_for('books',arguement=arguement)
+        return redirect(url)
     if request.method == "POST" and "users" in request.form:
         url = url_for('users_handler',arguement=arguement)
         return redirect(url)
