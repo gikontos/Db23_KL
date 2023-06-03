@@ -769,7 +769,28 @@ def operator_dashboard(arguement):
         return redirect(url)
     if request.method == "POST" and "reviews" in request.form:
         return redirect('/reviews')
+        if request.method == "POST" and "borrowings" in request.form:
+        return redirect(url_for('/borrowings',arguement=arguement))
     return render_template("operator_dashboard.html",arguement=arguement)
+
+@app.route('/borrowings', methods=["GET", "POST"])
+def borrowings():
+    arguement = request.args.get('arguement')
+    result = []
+    if request.method == "POST":
+        cur = mysql.connection.cursor()
+        cur.execute('select school_id from users where username = %s',(arguement,))
+        sid = cur.fetchone()
+        cur.execute('select borrowings.id,borrow_date,title,username from borrowings join books on borrowings.book_id=books.isbn join users on users.username = borrowings.user_id where returned = FALSE and school_id = %s',(sid,))
+        result = cur.fetchall()
+        returned = request.form.get('returned')
+        bid = request.form.get('bid')
+        if returned:
+            cur.execute('update borrowings set returned = TRUE where id = %s',(bid,))
+            mysql.connection.commit()
+            return redirect(url_for('borrowings',arguement=arguement))
+    return render_template("borrowings.html",arguement=arguement,borrowings_data=result)
+
 
 
 @app.route('/books', methods=["GET", "POST"])
