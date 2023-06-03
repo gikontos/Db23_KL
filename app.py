@@ -1,8 +1,10 @@
-from flask import Flask,request, render_template,redirect ,url_for,session,send_from_directory
+from flask import Flask,request, render_template,redirect ,url_for,session,send_from_directory,send_file
 import MySQLdb
 from flask_mysqldb import MySQL
 from datetime import datetime, timedelta
 from datetime import date as datetime_date
+import subprocess
+
 app = Flask(__name__)
 app.secret_key = 'any random string'
 
@@ -86,7 +88,11 @@ def book_page(arguement):
     a=cur.fetchall()
     categories=[i[0] for i in a]
     categories=",".join(categories)
-    return render_template("book_page.html",isbn=arguement,title=result[0],keywords=result[1],summary=result[2],no_pages=result[3],publisher=result[4],image=result[5], writers=writers,categories=categories)
+
+    cur.execute("select user_id,likert,review_text from reviews where published=%s and book_id=%s",("1",arguement))
+    reviews=cur.fetchall()
+
+    return render_template("book_page.html",isbn=arguement,title=result[0],keywords=result[1],summary=result[2],no_pages=result[3],publisher=result[4],image=result[5], writers=writers,categories=categories,reviews=reviews)
 
 @app.route("/user/<username>/review/<isbn>", methods=["GET","POST"])
 def review(username,isbn):
@@ -101,6 +107,46 @@ def review(username,isbn):
          return redirect("/user/{}".format(username))   
 
     return render_template("create_review.html",username=username,isbn=isbn, title=title)
+
+@app.route('/user/<username>/info', methods=["GET","POST"])
+def user_info(username):
+
+    if not session.get(username):
+        session.pop(username, None)
+        return redirect('/')
+
+    cur=mysql.connection.cursor()
+    cur.execute("select first_name,last_name,password,birthday,user_type from users where username=%s",(username,))
+    result=cur.fetchone()
+
+    if "save" in request.form:
+        if result[4]=="student":
+            password=request.form.get("password")
+            cur.execute("update users set password=%s where username=%s",(password,username))
+            mysql.connection.commit()
+            return redirect("/user/{}".format(username))
+        else:
+            password=request.form.get("password")
+            first_name=request.form.get("first_name")
+            last_name=request.form.get("last_name")
+            birthday=request.form.get("birthday")
+            cur.execute("update users set password=%s, first_name=%s, last_name=%s,birthday=%s where username=%s",(password,first_name,last_name,birthday,username))
+            mysql.connection.commit()
+            return redirect("/user/{}".format(username))
+    cur.execute("select isbn,title,likert,review_text,published from reviews join books on book_id=isbn join users on username=user_id where username=%s",(username,))
+    reviews=cur.fetchall()
+    if "isbn" in request.form:
+        isbn=request.form.get("isbn")
+        likert=request.form.get("likert")
+        text=request.form.get("text")
+        cur.execute("update reviews set likert=%s, review_text=%s,published=%s where user_id=%s and book_id=%s",(likert,text,"0",username,isbn))
+        mysql.connection.commit()
+        return redirect("/user/{}/info".format(username))
+
+
+    return render_template("user_info.html",username=username,first_name=result[0],last_name=result[1],password=result[2],birthday=result[3],user_type=result[4],reviews=reviews)
+
+
 
 @app.route('/user/<arguement>', methods=["GET","POST"])
 def user_page(arguement):
@@ -217,7 +263,8 @@ def user_page(arguement):
             category_check="and categories.category_name LIKE %s"  
             param+=("%%"+category+"%%",)
         if writer!="":
-            writer_check="and CONCAT(writers.first_name,\" \",writers.last_name) LIKE %s"  
+            writer_check="and ((CONCAT(writers.first_name,\" \",writers.last_name) LIKE %s) or (CONCAT(writers.last_name,\" \",writers.first_name) LIKE %s)"  
+            param+=("%%"+writer+"%%",)
             param+=("%%"+writer+"%%",)
         cur = mysql.connection.cursor()
         cur.execute("select distinct title,isbn from users join schools on users.school_id=schools.school_id join schools_books on schools.school_id=schools_books.school_id join books on schools_books.book_id=isbn join category_book on category_book.book_id=isbn join categories on category_book.category_id=categories.id join book_writer on book_writer.book_id=isbn join writers on writers.id=book_writer.writer_id where users.username=%s "+title_check+category_check+writer_check,param)
@@ -236,7 +283,12 @@ def user_page(arguement):
         cur.close()
         return render_template("user_dashboard.html",username=arguement,available_books=available_titles,borrowed_books=borrowed_titles,writer1=writer,category1=category,title1=title,title2=title2,category2=category2,writer2=writer2,available_isbns=available_isbns,status=borrowed_text,titles=titles,reservation_date=reservation_date,reservations=reservation_titles,reservation_isbns=reservation_isbns) 
       
-     
+    if "remove" in request.form:
+        isbn=request.form.get("remove")
+        cur=mysql.connection.cursor()
+        cur.execute("delete from reservations where user_id=%s and book_id=%s",(arguement,isbn))
+        mysql.connection.commit()
+        return redirect("/user/{}".format(arguement))
     cur = mysql.connection.cursor()
     cur.execute("select distinct title,isbn from users join schools on users.school_id=schools.school_id join schools_books on schools.school_id=schools_books.school_id join books on schools_books.book_id=isbn where users.username=%s",(arguement,))
     result = cur.fetchall()
@@ -313,22 +365,38 @@ def operators_same_number():
 
 
 @app.route("/admin/writers_5_books_less", methods=["GET","POST"])
-def populars_cat_pairs():
+def writers_5_books_less():
     if not session.get('administrator'):
             session.pop('administrator', None)
             return redirect('/')
     cur=mysql.connection.cursor()
-    cur.execute("select first_name,last_name, count(*) as c from writers join book_writer on writer_id=id group by first_name,last_name order by c DESC")
+    cur.execute("""
+    SELECT first_name, last_name, c
+    FROM (
+        SELECT first_name, last_name, COUNT(*) AS c
+        FROM writers
+        JOIN book_writer ON writer_id = id
+        GROUP BY first_name, last_name
+    ) AS subquery
+    WHERE c < (SELECT MAX(c) FROM (
+        SELECT COUNT(*) AS c
+        FROM writers
+        JOIN book_writer ON writer_id = id
+        GROUP BY writer_id
+    ) AS subsubquery) - 4
+    ORDER BY c DESC
+""")
+
     data=cur.fetchall()
+    cur.execute("select first_name,last_name,count(*) as c from writers join book_writer on writers.id=book_writer.writer_id group by first_name,last_name order by c desc")
 
+    writer=cur.fetchall()[0]
 
-
-
-    return render_template("writers_5_books_less.html",data=data)
+    return render_template("writers_5_books_less.html",data=data,writer=writer)
 
 
 @app.route("/admin/popular_cat_pairs", methods=["GET","POST"])
-def writers_5_books_less():
+def popular_cat_pairs():
     if not session.get('administrator'):
             session.pop('administrator', None)
             return redirect('/')
@@ -352,6 +420,61 @@ def unpopular_writers():
 
 
     return render_template("unpopular_writers.html",data=data)
+
+@app.route("/admin/backup",methods=["GET","POST"])
+def backup():
+    if not session.get('administrator'):
+            session.pop('administrator', None)
+            return redirect('/')
+    try:
+        # Define the command to execute mysqldump
+        cmd = 'mysqldump -u root  librarymanagement > backup.sql'
+        
+        # Execute the command as a subprocess
+        subprocess.run(cmd, shell=True, check=True)
+        
+        # Return a success message or redirect to another page
+        
+        return send_file(
+                'backup.sql',
+                as_attachment=True                
+            )
+    except subprocess.CalledProcessError as e:
+        # Handle any errors that occur during the backup process
+        return f"Backup failed: {str(e)}"
+
+@app.route("/admin/restore", methods=["GET", "POST"])
+def restore():
+    if not session.get('administrator'):
+        session.pop('administrator', None)
+        return redirect('/')
+
+    if request.method=="POST":
+        if 'file' not in request.files:
+            return "No file uploaded"
+
+        file = request.files['file']
+
+        if file.filename == '':
+            return "No file selected"
+
+        try:
+            # Save the uploaded file
+            file.save('restore.sql')
+
+            # Define the command to restore the database
+            cmd = 'D:/mariadb/download/bin/mysql -u root librarymanagement < restore.sql'
+
+            # Execute the command as a subprocess
+            subprocess.run(cmd, shell=True, check=True)
+
+            # Return a success message or redirect to another page
+            return "Database restored successfully!"
+        except subprocess.CalledProcessError as e:
+            # Handle any errors that occur during the restoration process
+            return f"Restore failed: {str(e)}"
+    return render_template("restore.html")
+
 
 @app.route("/admin/young_teachers", methods=["GET","POST"])
 def young_teachers():
@@ -377,7 +500,7 @@ def writers_teachers():
         cur.execute("select category_name,id from categories")
         result=cur.fetchall()
 
-        cur.execute("select users.first_name,users.last_name from users join borrowings on borrowings.user_id=username join books on borrowings.book_id=isbn join category_book on category_book.book_id=isbn where category_book.category_id=%s and user_type=%s and YEAR(borrow_date)>= DATE_SUB(CURDATE(), INTERVAL 1 YEAR)",(category_id,"teacher"))
+        cur.execute("select users.first_name,users.last_name from users join borrowings on borrowings.user_id=username join books on borrowings.book_id=isbn join category_book on category_book.book_id=isbn where category_book.category_id=%s and user_type=%s and borrow_date>= DATE_SUB(CURDATE(), INTERVAL 1 YEAR)",(category_id,"teacher"))
         teachers=cur.fetchall()
         cur.execute("select category_name from categories where id=%s",(category_id,))
         category=cur.fetchone()[0]
@@ -399,6 +522,9 @@ def show_borrowings():
             return redirect('/')
     
     cur=mysql.connection.cursor()
+    cur.execute("select school_id,school_name from schools")
+    schools=cur.fetchall()
+    
 
     if "school" in request.form:
         school_id=request.form.get("school")
@@ -407,7 +533,7 @@ def show_borrowings():
         data=cur.fetchall()
         cur.execute("select school_name from schools where school_id=%s",(school_id,))
         sname=cur.fetchone()[0]
-        return render_template("borrowings.html",schools=session["schools"],data=data,sname=sname)
+        return render_template("borrowings.html",schools=schools,data=data,sname=sname)
 
 
     if "search" in request.form:
@@ -424,13 +550,11 @@ def show_borrowings():
         data=cur.fetchall()
         cur.execute("select school_name from schools where school_id=%s",(school_id,))
         sname=cur.fetchone()[0]
-        return render_template("borrowings.html",schools=session["schools"],data=data,sname=sname,year=y,month=m)
+        return render_template("borrowings.html",schools=schools,data=data,sname=sname,year=y,month=m)
         
 
     
-    cur.execute("select school_id,school_name from schools")
-    schools=cur.fetchall()
-    session["schools"]=schools
+    
 
 
     return render_template("borrowings.html",schools=schools,data=[])
@@ -441,25 +565,44 @@ def schools():
     if not session.get('administrator'):
             session.pop('administrator', None)
             return redirect('/')
-    if "edit" in request.form:
-        number=request.form.get("edit")
-        data=session["result"][int(number)]
-        operator=session["operators"][int(number)]
-        session["operator"]=operator
-        session["data"]=data
-        return render_template("edit_school.html",data=data,operator=operator)
+    
     
     cur=mysql.connection.cursor()
+    
+    cur.execute("select school_name,school_id,principal_first_name,principal_last_name,city,address,email,phone from schools")
+    result=cur.fetchall()
+    
+    operators=[]
+    for i in result:
+        cur.execute("select first_name,last_name,username from users join schools on schools.school_id=users.school_id where schools.school_id=%s and user_type=%s",(i[1],"operator"))
+        a=cur.fetchone()
+
+        if a==None:
+            operators.append(["-","-","-"])
+        else:
+            operators.append([a[0],a[1],a[2]])
+    
+
+    if "edit" in request.form:
+        number=request.form.get("edit")
+        data=result[int(number)]
+        operator=operators[int(number)]
+        session["operator"]=operator
+        session["data"]=data
+        
+        return render_template("edit_school.html",data=data,operator=operator)
+    
+    
 
     if "delete" in request.form:
         number=request.form.get("delete")
         
-        school=session["result"][int(number)]
+        school=result[int(number)]
         cur.execute("delete from schools where school_id =%s",(school[1],))
         mysql.connection.commit()
         cur.execute("select school_name,school_id,principal_first_name,principal_last_name,city,address,email,phone from schools")
         result=cur.fetchall()
-        session["result"]=result
+        
         operators=[]
         for i in result:
             cur.execute("select first_name,last_name,username from users join schools on schools.school_id=users.school_id where schools.school_id=%s and user_type=%s",(i[1],"operator"))
@@ -469,7 +612,7 @@ def schools():
                 operators.append(["-","-","-"])
             else:
                 operators.append([a[0],a[1],a[2]])
-        session["operators"]=operators
+        
         return render_template("schools.html",data=result,operators=operators)
         
 
@@ -493,19 +636,6 @@ def schools():
 
 
     
-    cur.execute("select school_name,school_id,principal_first_name,principal_last_name,city,address,email,phone from schools")
-    result=cur.fetchall()
-    session["result"]=result
-    operators=[]
-    for i in result:
-        cur.execute("select first_name,last_name,username from users join schools on schools.school_id=users.school_id where schools.school_id=%s and user_type=%s",(i[1],"operator"))
-        a=cur.fetchone()
-
-        if a==None:
-            operators.append(["-","-","-"])
-        else:
-            operators.append([a[0],a[1],a[2]])
-    session["operators"]=operators
     return render_template("schools.html",data=result,operators=operators)
 
 @app.route('/admin/insert_school', methods=["GET","POST"])
@@ -591,12 +721,7 @@ def operator_requests():
     cur.execute("select username,first_name,last_name,school_name,birthday,register_requests.school_id, password from register_requests join schools on register_requests.school_id=schools.school_id")
     result=cur.fetchall()
     session["result"]=result
-    usernames=[i[0] for i in result]
-    fnames=[i[1] for i in result]
-    lnames=[i[2] for i in result]
-    sids=[i[3] for i in result]
-    birthdays=[i[4] for i in result]
-    snames=[i[5] for i in result]
+    
     return render_template("operator_requests.html",result=result)
 
 @app.route('/register', methods=["GET","POST"])
@@ -628,6 +753,7 @@ def register():
             return "request pending"
 
     return render_template("register.html",schools=schools)
+
 @app.route('/operator/<arguement>', methods=["GET", "POST"])
 def operator_dashboard(arguement):
     if not session.get(arguement):
