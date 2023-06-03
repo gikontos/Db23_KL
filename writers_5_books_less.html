@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <html>
 <head>
-    <title>unpopular writers page</title>
+    <title>writers with less books page</title>
 
 <style>
     table {
@@ -15,7 +15,7 @@
   </style>
   </head>
   <body><div >
-  <div style="max-width: 30vw;">Writers who have writen at least five books less than {{data[0][0]}} {{data[0][1]}} who has writen {{data[0][2]}}:</div>
+  <div style="max-width: 30vw;">Writers who have writen at least five books less than {{writer[0]}} {{writer[1]}} who has writen {{writer[2]}}:</div>
   <table>
     <tr>
       
@@ -29,7 +29,7 @@
     
     
     {%for i in data%}
-        {% if (i[2]<data[0][2]-4) %}
+        
         <tr>
         <td>{{i[0]}}</td>
         
@@ -37,7 +37,7 @@
         <td>{{i[2]}}</td>
             
       </tr>
-        {%endif%} 
+        
       
 
        
