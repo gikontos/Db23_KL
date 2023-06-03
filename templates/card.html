@@ -1,0 +1,31 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>User Card</title>
+    <style>
+        body {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+        }
+
+        .card {
+            text-align: center;
+            padding: 20px;
+            border: 1px solid #ccc;
+            border-radius: 5px;
+        }
+    </style>
+</head>
+<body>
+    <div class="card">
+        <h1>User Card</h1>
+        <p><strong>Username:</strong> {{ username }}</p>
+        <p><strong>First Name:</strong> {{ first_name }}</p>
+        <p><strong>Last Name:</strong> {{ last_name }}</p>
+        <p><strong>User Type:</strong> {{ user_type }}</p>
+        <p><strong>School Name:</strong> {{ school_name }}</p>
+    </div>
+</body>
+</html>

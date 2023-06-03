@@ -1,0 +1,68 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>writers_teachers page</title>
+
+    <style>
+        table {
+            border-collapse: collapse;
+        }
+
+        th, td {
+            border: 1px solid black;
+            padding: 8px;
+            vertical-align: middle; /* Align text vertically in the middle */
+        }
+
+        tr {
+            height: 40px; /* Set a fixed height for the table rows */
+        }
+    </style>
+</head>
+<body>
+    <form action="/admin/writers_teachers" method="POST">
+        <select name="category" onchange="this.form.submit()">
+            {%if writers==[]%}
+            <option value="" disabled selected>Category</option>
+            {%else%}
+            <option value="" disabled selected style="color: rgb(0, 16, 195);">{{category}}</option>
+            {%endif%}
+            {%for i in categories%}
+            <option value="{{i[1]}}">{{i[0]}}</option>
+            {%endfor%}
+        </select>
+    </form>    
+
+    <div style="display: inline-block;">
+        <div><h2>writers</h2></div>
+        <table>
+            <tr>
+                <th>first name</th>
+                <th>last name</th>
+            </tr>
+            {%for i in writers %}
+            <tr>
+                <td>{{i[0]}}</td>
+                <td>{{i[1]}}</td>
+            </tr>
+            {% endfor %}
+        </table>
+    </div>
+
+    <div style="display: inline-block;">
+        <div><h2>teachers</h2></div>
+        <table>
+            <tr>
+                <th>first name</th>
+                <th>last name</th>
+            </tr>
+            {%for i in teachers %}
+            <tr>
+                <td>{{i[0]}}</td>
+                <td>{{i[1]}}</td>
+            </tr>
+            {% endfor %}
+        </table>
+    </div>
+</body>
+</html>

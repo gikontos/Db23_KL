@@ -1,0 +1,45 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>admin page</title>
+    <style>
+        .container {
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+        }
+        
+    </style>
+</head>
+<body>
+    <div class="container">
+        <form action="/register" method="POST">
+            <div><input type="text" name="username" placeholder="Username" maxlength="20" required></div>      <br>        
+            <div><input type="text" name="first_name" placeholder="First Name" maxlength="20" required>  </div>  <br>
+            <div><input type="text" name="last_name" placeholder="Last Name" maxlength="20" required>    </div><br>
+            <div><input type="text" name="password"  placeholder="Password" maxlength="20" required> </div>    <br>            
+            <div><select name="user_type"  required>
+                <option value="" disabled selected>User type</option>
+                <option value="student">student</option>
+                <option value="teacher">teacher</option>
+                <option value="operator">operator</option></select>
+            </div><br>
+            <div> birthday <br><input type="date" name="birthday" required></div><br>
+            <div><select name="school" required>
+                
+                <option value="" disabled selected>School</option>
+                {% for i in schools %}
+                <option value="{{i[1]}}">{{i[0]}}</option>
+                {%endfor%}
+            </select><br>
+            </div><br>
+            <button type="submit" name="register">Register</button>
+            </form>
+
+
+
+    </div>
+</body>
+</html>

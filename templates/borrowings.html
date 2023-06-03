@@ -1,0 +1,70 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>borrowings page</title>
+
+<style>
+    table {
+      border-collapse: collapse;
+    }
+  
+    th, td {
+      border: 1px solid black;
+      padding: 8px;
+    }
+  </style>
+  </head>
+  <body>
+  
+  <table>
+    <tr>
+      
+      
+      <th>first name</th>
+      <th>last name</th>
+      <th>Title</th>
+      <th>borrowing date</th>
+      <th>returned</th>
+      
+    </tr>
+    <form action="/admin/borrowings" method="POST">
+    <select name="school" onchange="this.form.submit()" required>
+        {%if data==[]%}
+
+        <option value="" disabled selected>school</option>
+        {%else%}
+        <option value="" disabled selected style="color: rgb(0, 16, 195);">{{sname}}</option>
+        {%endif%}
+        {%for i in schools%}
+        <option value="{{i[0]}}">{{i[1]}}</option>
+        {%endfor%}
+    </select>
+    </form>
+    <form action="/admin/borrowings" method="POST">
+        <input type="text" name="year" value="{{year}}" placeholder="Year" pattern="[0-9]*" title="Insert the year e.g. 2010">
+        <input type="text" name="month" value="{{month}}" placeholder="Month" pattern="^(?:[1-9]|1[0-2])$" title="Insert the month e.g. for February insert 2">
+        <button type="submit" name="search">Search</button>
+    
+    </form>
+    {%for i in data%}
+    <tr>
+        <td>{{i[0]}}</td>
+        
+        <td>{{i[1]}}</td>
+        <td>{{i[2]}}</td>
+        <td>{{i[3]}}</td>
+        {%if i[4]==1%}
+
+        <td>yes</td>
+        {%else%}
+        <td>no</td>
+        {%endif%}        
+      </tr>
+      
+    {% endfor %}  
+
+
+    
+  </table>
+</body>
+</html>
