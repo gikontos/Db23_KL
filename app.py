@@ -770,7 +770,30 @@ def operator_dashboard(arguement):
 
 @app.route('/books', methods=["GET", "POST"])
 def books():
-    return render_template("books.html")
+    arguement = request.args.get('arguement')
+    books_data = []
+    print(arguement)
+    if request.method == "POST":
+        cur = mysql.connection.cursor()
+        writer = request.form.get("writer")
+        category = request.form.get("category")
+        title = request.form.get("title")
+        no_copies = request.form.get("no_copies")
+        cur.execute('select title,isbn,no_copies from books join schools_books on schools_books.book_id = books.isbn join schools on schools.school_id = schools_books.school_id join users on schools.school_id = users.school_id where username = %s',(arguement,))
+        books2 = cur.fetchall()
+        for book in books2:
+            cur.execute('select first_name,last_name from book_writer join books on book_writer.book_id = books.isbn join writers on book_writer.writer_id = writers.id where books.isbn = %s',(book[1],))
+            a = cur.fetchall()
+            names = [i[0]+" "+i[1] for i in a]
+            books_data.append({
+                'title': book[0],
+                'isbn': book[1],
+                'no_copies': book[2],
+                'writers': names
+            })
+
+    return render_template("books.html",books_data=books_data,arguement=arguement)
+
 
 @app.route('/users_handler', methods=["GET", "POST"])
 def users_handler():
