@@ -1,7 +1,4 @@
 
-
-
-
 CREATE DATABASE if not exists LibraryManagement CHARACTER SET utf8 COLLATE utf8_general_ci;
 
 /* =====================
@@ -31,19 +28,28 @@ CREATE TABLE if not exists users
 	last_name varchar(20) NOT NULL ,
 	password varchar(30) NOT NULL,
 	user_type varchar(20) NOT NULL,
-	school_id int,
-	FOREIGN KEY (school_id) REFERENCES schools(school_id) ,
+	school_id int ,
+	enabled BOOLEAN DEFAULT true,
+	birthday date not null,
+	unique (first_name,last_name,user_type,school_id) ,
+	FOREIGN KEY (school_id) REFERENCES schools(school_id) on delete cascade,
 	CHECK (user_type="teacher" OR user_type="student" or user_type="operator" or user_type="administrator")
 );
 
-/* create table if not exists operators(
-	user_id varchar(20),
-	school_id int,
-	FOREIGN key (user_id) references users(username),
-	FOREIGN key (school_id) references schools(school_id),
-	primary key (user_id,school_id)
+create table if not exists register_requests
+(
+	username varchar(20) NOT NULL ,
+	first_name varchar(20) NOT NULL ,
+	last_name varchar(20) NOT NULL ,
+	password varchar(30) NOT NULL,
+	user_type varchar(20) NOT NULL,
+	school_id int not null,
+	birthday date not null,
+	FOREIGN KEY (school_id) REFERENCES schools(school_id) on delete cascade,
+	primary key (first_name,last_name,user_type,school_id) 
 );
- */
+
+
 
 CREATE TABLE if not exists books
 (
@@ -57,20 +63,7 @@ CREATE TABLE if not exists books
 );
 
 
-/*
-CREATE TABLE if not exists keywords
-(
-	word varchar(20) NOT NULL PRIMARY KEY
-);*/
 
-/*
-CREATE TABLE if not exists publishers
-(
-	id int AUTO_INCREMENT NOT NULL PRIMARY KEY,
-	first_name varchar(20) NOT NULL,
-	last_name varchar(20)
-);
-*/
 
 CREATE TABLE if not exists  writers
 (
@@ -93,10 +86,11 @@ CREATE TABLE if not exists  reviews
 (
 	review_text varchar(500),
 	likert int NOT NULL,
+	published BOOLEAN DEFAULT false,
 	user_id varchar(20) not null,
-	FOREIGN KEY (user_id) references users(username) ,
+	FOREIGN KEY (user_id) references users(username) on delete cascade ,
 	book_id char(13) not null ,
-	FOREIGN KEY (book_id) REFERENCES books(isbn),
+	FOREIGN KEY (book_id) REFERENCES books(isbn) on delete cascade,
 	primary key (book_id,user_id),
 	CHECK (likert>=1 AND likert<=5)
 );
@@ -112,20 +106,21 @@ CREATE TABLE if not exists  schools_books
 (
 	
 	school_id int, 
-	FOREIGN KEY (school_id) REFERENCES schools(school_id),
-	book_id char(13), 
-	FOREIGN KEY (book_id) REFERENCES books(isbn),
+	FOREIGN KEY (school_id) REFERENCES schools(school_id) on delete cascade,
+	book_id varchar(13), 
+	FOREIGN KEY (book_id) REFERENCES books(isbn) on delete cascade,
 	primary key (school_id,book_id),
-	no_copies int
+	no_copies int,
+	check (no_copies>0)
 );
 
 
 CREATE TABLE if not exists reservations
 (
 	user_id varchar(20),
-	FOREIGN KEY (user_id) REFERENCES users(username),
-	book_id char(13),
-	FOREIGN KEY (book_id) REFERENCES books(isbn),
+	FOREIGN KEY (user_id) REFERENCES users(username) on delete cascade,
+	book_id varchar(13),
+	FOREIGN KEY (book_id) REFERENCES books(isbn) on delete cascade,
 	reservation_date datetime default current_timestamp,
 	id int auto_increment primary key	
 );
@@ -133,29 +128,17 @@ CREATE TABLE if not exists reservations
 CREATE TABLE if not exists borrowings
 (
 	user_id varchar(20),
-	FOREIGN KEY (user_id) REFERENCES users(username),
+	FOREIGN KEY (user_id) REFERENCES users(username) on delete cascade,
 	book_id varchar(13),
-	FOREIGN KEY (book_id) REFERENCES books(isbn),
+	FOREIGN KEY (book_id) REFERENCES books(isbn) on delete cascade,
 	borrow_date datetime default current_timestamp,
 	id int auto_increment primary key ,
-	duration_in_days int not null,
-	check (30>duration_in_days>0),
 	returned boolean default False
 );
 
 
 
-/*
-CREATE TABLE if not exists keyword_book
-(
-	
-	book_id char(13),
-	FOREIGN KEY (book_id) REFERENCES books(isbn),
-	keyword varchar(20),
-	FOREIGN KEY (keyword) REFERENCES keywords(word),
-	primary key (book_id,keyword)
-);
-*/
+
 CREATE TABLE IF not exists category_book 
 (
     book_id VARCHAR(13),
@@ -170,7 +153,7 @@ CREATE TABLE IF not exists category_book
 CREATE TABLE if not exists book_writer
 (
 	
-	book_id char(13),
+	book_id varchar(13),
 	FOREIGN KEY (book_id) REFERENCES books(isbn),
 	writer_id int,
 	FOREIGN KEY (writer_id) REFERENCES writers(id),
@@ -178,17 +161,7 @@ CREATE TABLE if not exists book_writer
 	
 );
 
-/*
-CREATE TABLE if not exists book_publisher
-(
-	
-	book_id char(13),
-	FOREIGN KEY (book_id) REFERENCES books(isbn),
-	publisher_id int,
-	FOREIGN KEY (publisher_id) REFERENCES publishers(id),
-	primary key (book_id,publisher_id)
-	
-);*/
+
 
 --delete reservations after a week
 SET GLOBAL event_scheduler = ON;
@@ -259,7 +232,7 @@ BEGIN
     FROM borrowings
     WHERE user_id = NEW.user_id
       AND returned = FALSE
-      AND borrow_date <= DATE_SUB(CURRENT_DATE, INTERVAL duration_in_days DAY)
+      AND borrow_date <= DATE_SUB(CURRENT_DATE, INTERVAL 7 DAY)
   ) INTO flag_value;
   
   -- If there is a matching row, raise an error
@@ -287,7 +260,7 @@ BEGIN
     WHERE user_id = NEW.user_id
       AND returned = FALSE
 	  and book_id = new.book_id
-      AND borrow_date >= DATE_SUB(CURRENT_DATE, INTERVAL duration_in_days DAY)
+      AND borrow_date >= DATE_SUB(CURRENT_DATE, INTERVAL 7 DAY)
   ) INTO flag_value;
   
   -- If there is a matching row, raise an error
@@ -307,19 +280,34 @@ BEFORE INSERT ON borrowings
 FOR EACH ROW
 BEGIN
     DECLARE count INT;
+    DECLARE s_id int;
     
     SELECT schools_books.no_copies into count
 	FROM schools_books
-	JOIN books ON schools_books.book_id = books.isbn
 	join schools on schools_books.school_id=schools.school_id
-WHERE books.isbn = new.book_id;
+	join users on users.school_id=schools.school_id
+WHERE schools_books.book_id = new.book_id and users.username=new.user_id ;
     
     IF (count = 0) THEN
     SIGNAL SQLSTATE '45000'
       SET MESSAGE_TEXT = 'Cannot borrow. Not enough copies.';
+	ELSE 
+
+	
+    SELECT users.school_id into s_id
+	FROM users
+	join schools on schools.school_id=users.school_id
+	
+	WHERE username = new.user_id ;
+	
+	UPDATE schools_books
+	SET no_copies = no_copies - 1
+	WHERE book_id=new.book_id and school_id=s_id;
   	END IF;
+
 END$
 DELIMITER ;
+
 
 DELIMITER $ --check each school has one operator and one operator operates one school
 CREATE TRIGGER check_one_operator BEFORE INSERT ON users
@@ -336,7 +324,7 @@ BEGIN
   ) INTO flag_value;
   
   -- If there is a matching row, raise an error
-  IF flag_value = TRUE THEN
+  IF flag_value = TRUE and new.user_type="operator" THEN
     SIGNAL SQLSTATE '45000'
       SET MESSAGE_TEXT = 'Cannot insert. There is already an operator for this school.';
   END IF;
@@ -370,9 +358,8 @@ END$
 DELIMITER ;
  */
 create view late_returns as 
-SELECT borrowings.id, borrowings.borrow_date, borrowings.duration_in_days, books.title, users.username
+SELECT borrowings.id, borrowings.borrow_date, books.title, users.username
 from borrowings
 join books on borrowings.book_id=books.isbn
 join users on borrowings.user_id=users.username
-where (borrowings.borrow_date + INTERVAL borrowings.duration_in_days DAY)<current_date and borrowings.returned=false;
-
+where (borrowings.borrow_date + INTERVAL 7 DAY)<current_date and borrowings.returned=false;

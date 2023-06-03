@@ -30,19 +30,21 @@ for i in range(DUMMY_DATA_NUMBER):
 
 DUMMY_DATA_NUMBER = 30
 TABLE_NAME = "users"
-TABLE_COLUMNS = ["username", "first_name", "last_name", "password","user_type","school_id"]
+TABLE_COLUMNS = ["username", "first_name", "last_name", "password","user_type","school_id","birthday"]
 student_usernames=[]
 
-
+school_users=[[],[],[]]
 for i in range(DUMMY_DATA_NUMBER):
     username = "user"+str(i)
     student_usernames.append(username)
     firstname=fake.first_name()
+    birthday=fake.date()
     lastname = fake.last_name()
     x=random.randint(8,30)
     password=fake.password(length=x)
     school_id=random.choice(school_ids)
-    content += f'INSERT INTO {TABLE_NAME} ({",".join(TABLE_COLUMNS)}) VALUES ("{username}","{firstname}","{lastname}","{password}","student",{school_id});\n'
+    school_users[school_id-1].append(username)
+    content += f'INSERT INTO {TABLE_NAME} ({",".join(TABLE_COLUMNS)}) VALUES ("{username}","{firstname}","{lastname}","{password}","student",{school_id},"{birthday}");\n'
 
 
 ########################### teachers ###########################
@@ -50,7 +52,7 @@ for i in range(DUMMY_DATA_NUMBER):
 
 DUMMY_DATA_NUMBER = 10
 TABLE_NAME = "users"
-TABLE_COLUMNS = ["username", "first_name", "last_name", "password","user_type","school_id"]
+TABLE_COLUMNS = ["username", "first_name", "last_name", "password","user_type","school_id","birthday"]
 teacher_usernames=[]
 
 
@@ -60,38 +62,26 @@ for i in range(DUMMY_DATA_NUMBER):
     firstname=fake.first_name()
     lastname = fake.last_name()
     x=random.randint(8,30)
+    birthday=fake.date()
     password=fake.password(length=x)
-    #school_id=random.choice(school_ids)
     school_id=i%3 + 1
-    content += f'INSERT INTO {TABLE_NAME} ({",".join(TABLE_COLUMNS)}) VALUES ("{username}","{firstname}","{lastname}","{password}","teacher",{school_id});\n'
-
-
-########################### operators ###########################
-
-
-DUMMY_DATA_NUMBER = 3
-TABLE_NAME = "users"
-TABLE_COLUMNS = ["username", "first_name", "last_name", "password","user_type","school_id"]
+    school_users[school_id - 1].append(username)
+    content += f'INSERT INTO {TABLE_NAME} ({",".join(TABLE_COLUMNS)}) VALUES ("{username}","{firstname}","{lastname}","{password}","teacher",{school_id},"{birthday}");\n'
+    #operators
+    if i>DUMMY_DATA_NUMBER-4:
+        username = "user" + str(i + 30+3)
+        password = fake.password(length=x)
+        content += f'INSERT INTO {TABLE_NAME} ({",".join(TABLE_COLUMNS)}) VALUES ("{username}","{firstname}","{lastname}","{password}","operator",{school_id},"{birthday}");\n'
 
 
 
-for i in range(DUMMY_DATA_NUMBER):
-    username = "user"+str(i+40)
-    teacher_usernames.append(username)
-    firstname=fake.first_name()
-    lastname = fake.last_name()
-    x=random.randint(8,30)
-    password=fake.password(length=x)
-    #school_id=random.choice(school_ids)
-    school_id=i%3 + 1
-    content += f'INSERT INTO {TABLE_NAME} ({",".join(TABLE_COLUMNS)}) VALUES ("{username}","{firstname}","{lastname}","{password}","operator",{school_id});\n'
 
 ########################### administrator ###########################
 
 
 DUMMY_DATA_NUMBER = 1
 TABLE_NAME = "users"
-TABLE_COLUMNS = ["username", "first_name", "last_name", "password","user_type","school_id"]
+TABLE_COLUMNS = ["username", "first_name", "last_name", "password","user_type","school_id", "birthday"]
 
 
 
@@ -100,8 +90,9 @@ username = "administrator"
 firstname=fake.first_name()
 lastname = fake.last_name()
 x=random.randint(8,30)
+birthday=fake.date()
 password=fake.password(length=x)
-content += f'INSERT INTO {TABLE_NAME} ({",".join(TABLE_COLUMNS)}) VALUES ("{username}","{firstname}","{lastname}","{password}","administrator",NULL);\n'
+content += f'INSERT INTO {TABLE_NAME} ({",".join(TABLE_COLUMNS)}) VALUES ("{username}","{firstname}","{lastname}","{password}","administrator",NULL,"{birthday}");\n'
 
 ########################### books ###########################
 
@@ -118,7 +109,7 @@ for i in range(DUMMY_DATA_NUMBER):
     isbns.append(isbn)
     w=random.randint(1,8)
     title=fake.text(max_nb_chars=w*5)
-    publisher=fake.first_name()+fake.last_name()
+    publisher=fake.first_name()+" "+fake.last_name()
 
 
     w=random.randint(3,5)
@@ -155,28 +146,6 @@ for i in categories:
     content += f'INSERT INTO {TABLE_NAME} ({",".join(TABLE_COLUMNS)}) VALUES ("{i}");\n'
 
 
-########################### operators ###########################
-
-# TABLE_NAME = "operators"
-# TABLE_COLUMNS = ["user_id","school_id"]
-# DUMMY_DATA_NUMBER = 3
-# content += f'INSERT INTO {TABLE_NAME} ({",".join(TABLE_COLUMNS)}) VALUES ("{"user30"}",{0});\n'
-# content += f'INSERT INTO {TABLE_NAME} ({",".join(TABLE_COLUMNS)}) VALUES ("{"user31"}",{1});\n'
-# content += f'INSERT INTO {TABLE_NAME} ({",".join(TABLE_COLUMNS)}) VALUES ("{"user32"}",{2});\n'
-#
-
-
-########################### reviews ###########################
-
-TABLE_NAME = "reviews"
-TABLE_COLUMNS = ["review_text","likert","user_id","book_id"]
-DUMMY_DATA_NUMBER = 6
-for i in range(DUMMY_DATA_NUMBER):
-    review_text=fake.text(max_nb_chars=300)
-    likert=random.randint(1,5)
-    user_id=random.choice(student_usernames+teacher_usernames)
-    book_id=random.choice(isbns)
-    content += f'INSERT INTO {TABLE_NAME} ({",".join(TABLE_COLUMNS)}) VALUES ("{review_text}",{likert},"{user_id}","{book_id}");\n'
 
 
 
@@ -186,12 +155,29 @@ for i in range(DUMMY_DATA_NUMBER):
 TABLE_NAME = "schools_books"
 TABLE_COLUMNS = ["school_id","book_id","no_copies"]
 DUMMY_DATA_NUMBER = 200
+school_book=[[],[],[]]
 for i in range(DUMMY_DATA_NUMBER):
-    no_copies=random.randint(10,40)
+    no_copies=random.randint(1,40)
     school_id=random.choice(school_ids)
     book_id=random.choice(isbns)
+    school_book[school_id-1].append(book_id)
     content += f'INSERT INTO {TABLE_NAME} ({",".join(TABLE_COLUMNS)}) VALUES ({school_id},"{book_id}",{no_copies});\n'
 
+
+
+
+########################### reviews ###########################
+
+TABLE_NAME = "reviews"
+TABLE_COLUMNS = ["review_text","likert","user_id","book_id", "published"]
+DUMMY_DATA_NUMBER = 70
+for i in range(DUMMY_DATA_NUMBER):
+    review_text=fake.text(max_nb_chars=300)
+    likert=random.randint(1,5)
+    sc=random.choice(school_ids)
+    user_id=random.choice(school_users[sc-1])
+    book_id=random.choice(school_book[sc-1])
+    content += f'INSERT INTO {TABLE_NAME} ({",".join(TABLE_COLUMNS)}) VALUES ("{review_text}",{likert},"{user_id}","{book_id}",1);\n'
 
 
 ########################### reservations ###########################
@@ -201,24 +187,30 @@ TABLE_COLUMNS = ["user_id","book_id","reservation_date"]
 DUMMY_DATA_NUMBER = 40
 for i in range(DUMMY_DATA_NUMBER):
     reservation=fake.date_time_between(start_date='-7d')
-    user_id=random.choice(student_usernames+teacher_usernames)
-    book_id=random.choice(isbns)
+    sc = random.choice(school_ids)
+    user_id = random.choice(school_users[sc - 1])
+    book_id = random.choice(school_book[sc - 1])
     content += f'INSERT INTO {TABLE_NAME} ({",".join(TABLE_COLUMNS)}) VALUES ("{user_id}","{book_id}","{reservation}");\n'
 
 
 ########################### borrowings ###########################
 
 TABLE_NAME = "borrowings"
-TABLE_COLUMNS = ["user_id","book_id","borrow_date","duration_in_days","returned"]
-DUMMY_DATA_NUMBER = 70
+TABLE_COLUMNS = ["user_id","book_id","borrow_date","returned"]
+DUMMY_DATA_NUMBER = 200
 for i in range(DUMMY_DATA_NUMBER):
     borrow=fake.date_time_between(start_date='-30d')
-    user_id=random.choice(student_usernames+teacher_usernames)
-    book_id=random.choice(isbns)
-    duration = 7
+    sc = random.choice(school_ids)
+    user_id = random.choice(school_users[sc - 1])
+    book_id = random.choice(school_book[sc - 1])
+
     a=random.uniform(0,1)
     returned=(a>0.3)
-    content += f'INSERT INTO {TABLE_NAME} ({",".join(TABLE_COLUMNS)}) VALUES ("{user_id}","{book_id}","{borrow}",{duration},{returned});\n'
+    if returned:
+        a=1
+    else:
+        a=0
+    content += f'INSERT INTO {TABLE_NAME} ({",".join(TABLE_COLUMNS)}) VALUES (\'{user_id}\',\'{book_id}\',\'{borrow}\',{a});\n'
 
 
 

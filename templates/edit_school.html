@@ -1,0 +1,84 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>edit school page</title>
+    <style>
+        table {
+            border-collapse: collapse;
+        }
+        
+        th, td {
+            border: 1px solid black;
+            padding: 8px;
+        }
+        
+        .container {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+        }
+        
+        form {
+            display: flex;
+            flex-direction: column;
+            align-items: flex-start;
+        }
+
+        form > div {
+            margin-bottom: 10px;
+        }
+
+        form > div > input {
+            margin-left: 10px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <form action="/schools" method="POST">
+            <div>
+                <label for="school_name">School name:</label>
+                <input type="text" id="school_name" name="school_name" value="{{data[0]}}" placeholder="School name" required>
+            </div>
+            <div>
+                <label for="p_fn">Principal's first name:</label>
+                <input type="text" id="p_fn" name="p_fn" value="{{data[2]}}" placeholder="Principal's first name" required>
+            </div>
+            <div>
+                <label for="p_ln">Principal's last name:</label>
+                <input type="text" id="p_ln" name="p_ln" value="{{data[3]}}" placeholder="Principal's last name" required>
+            </div>
+            <div>
+                <label for="city">City:</label>
+                <input type="text" id="city" name="city" value="{{data[4]}}" placeholder="City" required>
+            </div>
+            <div>
+                <label for="address">Address:</label>
+                <input type="text" id="address" name="address" value="{{data[5]}}" placeholder="Address" required>
+            </div>
+            <div>
+                <label for="email">Email:</label>
+                <input type="text" id="email" name="email" value="{{data[6]}}" placeholder="Email" required>
+            </div>
+            <div>
+                <label for="phone">Phone:</label>
+                <input type="text" id="phone" name="phone" value="{{data[7]}}" placeholder="Phone" required>
+            </div>
+            <div>
+                <label for="op_fn">Operator's first name:</label>
+                <input type="text" id="op_fn" name="op_fn" value="{{operator[0]}}" placeholder="Operator's first name" readonly>
+            </div>
+            <div>
+                <label for="op_ln">Operator's last name:</label>
+                <input type="text" id="op_ln" name="op_ln" value="{{operator[1]}}" placeholder="Operator's last name" readonly>
+            </div>
+            <div>
+                <label for="checkbox">Remove operator:</label>
+                <input type="checkbox" id="checkbox" name="checkbox" value="True">
+            </div>
+            <button type="submit" name="apply">Apply</button>
+        </form>
+    </div>
+</body>
+</html>

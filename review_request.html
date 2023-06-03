@@ -1,0 +1,51 @@
+<!-- user_request.html -->
+
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Review Requests</title>
+    <style>
+        table {
+            border-collapse: collapse;
+            width: 100%;
+        }
+        th, td {
+            padding: 8px;
+            text-align: left;
+            border-bottom: 1px solid #ddd;
+        }
+        button {
+            padding: 5px 10px;
+            margin-right: 10px;
+        }
+    </style>
+</head>
+<body>
+    <h1>Review Requests</h1>
+    <table>
+        <tr>
+            <th>Review Text</th>
+            <th>Likert</th>
+            <th>Username</th>
+            <th>Title</th>
+            <th>Actions</th>
+        </tr>
+        {% for review in reviews %}
+            <tr>
+                <td>{{ review[0] }}</td>
+                <td>{{ review[1] }}</td>
+                <td>{{ review[2] }}</td>
+                <td>{{ review[3] }}</td>
+                <td>
+                    <form action="{{ url_for('reviews_requests') }}" method="POST">
+                        <input type="hidden" name="user" value="{{ review[2] }}">
+                        <input type="hidden" name="book" value="{{ review[4] }}">
+                        <button type="submit" name="approve" value="approve">Approve</button>
+                        <button type="submit" name="reject" value="reject">Reject</button>
+                    </form>
+                </td>
+            </tr>
+        {% endfor %}
+    </table>
+</body>
+</html>
