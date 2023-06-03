@@ -3,6 +3,17 @@
 <head>
     <title>book page</title>
     <style>
+
+
+    table {
+      border-collapse: collapse;
+    }
+  
+    th, td {
+      border: 1px solid black;
+      padding: 8px;
+    }
+ 
         .container {
             display: flex;
             flex-direction: column;
@@ -32,6 +43,32 @@
         <div style="display: flex; align-items: center;">
         <h2 style="margin-right: 10px;">Number of pages:</h2> {{no_pages}}</div>
         <div> <img src="{{image}}" alt="Image" style="max-width: 30vw; max-height: 30vh;"> </div>
+
+  </div>
+  <div><h2>Reviews:</h2> <br>
+    <table>
+      <tr>
+        
+        
+        <th>Written by:</th>
+        <th>Likert rating:</th>
+        <th>Text:</th>
+        
+      </tr>
+      
+      {%for i in reviews%}
+      <tr>
+          <td>{{i[0]}}</td>
+          
+          <td>{{i[1]}}</td>
+          <td>{{i[2]}}</td>
+          </tr>
+        
+      {% endfor %}  
+  
+  
+      
+    </table>
 
   </div>
 </body>
