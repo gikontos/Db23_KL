@@ -1,7 +1,4 @@
 
-
-
-
 CREATE DATABASE if not exists LibraryManagement CHARACTER SET utf8 COLLATE utf8_general_ci;
 
 /* =====================
@@ -113,7 +110,8 @@ CREATE TABLE if not exists  schools_books
 	book_id varchar(13), 
 	FOREIGN KEY (book_id) REFERENCES books(isbn) on delete cascade,
 	primary key (school_id,book_id),
-	no_copies int
+	no_copies int,
+	check (no_copies>0)
 );
 
 
@@ -135,8 +133,6 @@ CREATE TABLE if not exists borrowings
 	FOREIGN KEY (book_id) REFERENCES books(isbn) on delete cascade,
 	borrow_date datetime default current_timestamp,
 	id int auto_increment primary key ,
-	duration_in_days int not null,
-	check (30>duration_in_days>0),
 	returned boolean default False
 );
 
@@ -236,7 +232,7 @@ BEGIN
     FROM borrowings
     WHERE user_id = NEW.user_id
       AND returned = FALSE
-      AND borrow_date <= DATE_SUB(CURRENT_DATE, INTERVAL duration_in_days DAY)
+      AND borrow_date <= DATE_SUB(CURRENT_DATE, INTERVAL 7 DAY)
   ) INTO flag_value;
   
   -- If there is a matching row, raise an error
@@ -264,7 +260,7 @@ BEGIN
     WHERE user_id = NEW.user_id
       AND returned = FALSE
 	  and book_id = new.book_id
-      AND borrow_date >= DATE_SUB(CURRENT_DATE, INTERVAL duration_in_days DAY)
+      AND borrow_date >= DATE_SUB(CURRENT_DATE, INTERVAL 7 DAY)
   ) INTO flag_value;
   
   -- If there is a matching row, raise an error
@@ -284,19 +280,34 @@ BEFORE INSERT ON borrowings
 FOR EACH ROW
 BEGIN
     DECLARE count INT;
+    DECLARE s_id int;
     
     SELECT schools_books.no_copies into count
 	FROM schools_books
-	JOIN books ON schools_books.book_id = books.isbn
 	join schools on schools_books.school_id=schools.school_id
-WHERE books.isbn = new.book_id;
+	join users on users.school_id=schools.school_id
+WHERE schools_books.book_id = new.book_id and users.username=new.user_id ;
     
     IF (count = 0) THEN
     SIGNAL SQLSTATE '45000'
       SET MESSAGE_TEXT = 'Cannot borrow. Not enough copies.';
+	ELSE 
+
+	
+    SELECT users.school_id into s_id
+	FROM users
+	join schools on schools.school_id=users.school_id
+	
+	WHERE username = new.user_id ;
+	
+	UPDATE schools_books
+	SET no_copies = no_copies - 1
+	WHERE book_id=new.book_id and school_id=s_id;
   	END IF;
+
 END$
 DELIMITER ;
+
 
 DELIMITER $ --check each school has one operator and one operator operates one school
 CREATE TRIGGER check_one_operator BEFORE INSERT ON users
@@ -347,9 +358,8 @@ END$
 DELIMITER ;
  */
 create view late_returns as 
-SELECT borrowings.id, borrowings.borrow_date, borrowings.duration_in_days, books.title, users.username
+SELECT borrowings.id, borrowings.borrow_date, books.title, users.username
 from borrowings
 join books on borrowings.book_id=books.isbn
 join users on borrowings.user_id=users.username
-where (borrowings.borrow_date + INTERVAL borrowings.duration_in_days DAY)<current_date and borrowings.returned=false;
-
+where (borrowings.borrow_date + INTERVAL 7 DAY)<current_date and borrowings.returned=false;
