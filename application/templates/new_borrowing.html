@@ -1,0 +1,24 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>New Borrowing</title>
+</head>
+<body>
+    <h1>New Borrowing</h1>
+    <form action="{{ url_for('new_borrowing', arguement=arguement) }}" method="POST">
+        <label for="user">User:</label>
+        <select id="user" name="user">
+            {% for user in users %}
+                <option value="{{ user[0] }}">{{ user[0] }}</option>
+            {% endfor %}
+        </select>
+        <label for="book">Book:</label>
+        <select id="book" name="book">
+            {% for book in books %}
+                <option value="{{ book[1] }}">{{ book[0] }}</option>
+            {% endfor %}
+        </select>
+        <input type="submit" name="save" value="Save">
+    </form>
+</body>
+</html>

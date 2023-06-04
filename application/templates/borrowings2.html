@@ -1,0 +1,45 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Borrowings</title>
+    <style>
+        table {
+            border-collapse: collapse;
+            width: 100%;
+        }
+        th, td {
+            padding: 8px;
+            text-align: left;
+            border-bottom: 1px solid #ddd;
+        }
+    </style>
+</head>
+<body>
+    <h1>Borrowings</h1>
+    <table>
+        <tr>
+            <th>Username</th>
+            <th>Title</th>
+            <th>Borrow Date</th>
+            <th>Action</th>
+        </tr>
+        {% for borrowing in borrowings_data %}
+            <tr>
+                <td>{{ borrowing[3] }}</td>
+                <td>{{ borrowing[2] }}</td>
+                <td>{{ borrowing[1] }}</td>
+                <td>
+                    <form action="{{ url_for('borrowings2', arguement=arguement) }}" method="POST">
+                        <input type="hidden" name="bid" value="{{ borrowing[0] }}">
+                        <input type="submit" name="returned" value="Return">
+                    </form>
+                </td>
+            </tr>
+        {% endfor %}
+    </table>
+<h2>New Borrowing</h2>
+<form action ="{{ url_for('new_borrowing',arguement=arguement) }}" method="POST">
+    <input type="submit" name="new_borrowing" value="New Borrowing">
+</form>
+</body>
+</html>
