@@ -828,6 +828,14 @@ def new_borrowing():
     return render_template("new_borrowing.html",arguement=arguement,books=books,users=users)
 
 
+@app.route('/excedeed_limits', methods=["GET", "POST"])
+def excedeed_limits():
+    return render_template("limits.html")
+
+@app.route('/success', methods=["GET", "POST"])
+def success():
+    return render_template("success.html")
+
 @app.route('/books', methods=["GET", "POST"])
 def books():
     arguement = request.args.get('arguement')
