@@ -756,6 +756,7 @@ def register():
 
     return render_template("register.html",schools=schools)
 
+
 @app.route('/operator/<arguement>', methods=["GET", "POST"])
 def operator_dashboard(arguement):
     if not session.get(arguement):
@@ -769,12 +770,12 @@ def operator_dashboard(arguement):
         return redirect(url)
     if request.method == "POST" and "reviews" in request.form:
         return redirect('/reviews')
-        if request.method == "POST" and "borrowings" in request.form:
-        return redirect(url_for('/borrowings',arguement=arguement))
+    if request.method == "POST" and "borrowings" in request.form:
+        return redirect(url_for('/borrowings2',arguement=arguement))
     return render_template("operator_dashboard.html",arguement=arguement)
 
-@app.route('/borrowings', methods=["GET", "POST"])
-def borrowings():
+@app.route('/borrowings2', methods=["GET", "POST"])
+def borrowings2():
     arguement = request.args.get('arguement')
     result = []
     if request.method == "POST":
@@ -785,12 +786,46 @@ def borrowings():
         result = cur.fetchall()
         returned = request.form.get('returned')
         bid = request.form.get('bid')
+        new_borrowing = request.form.get('new_borrowing')
         if returned:
             cur.execute('update borrowings set returned = TRUE where id = %s',(bid,))
             mysql.connection.commit()
-            return redirect(url_for('borrowings',arguement=arguement))
-    return render_template("borrowings.html",arguement=arguement,borrowings_data=result)
+            return redirect(url_for('borrowings2',arguement=arguement))
+        if new_borrowing:
+            return redirect(url_for('new_borrowing',arguement=arguement))
+    return render_template("borrowings2.html",arguement=arguement,borrowings_data=result)
 
+@app.route('/new_borrowing', methods=["GET", "POST"])
+def new_borrowing():
+    arguement = request.args.get('arguement')
+    if request.method == "POST":
+        cur = mysql.connection.cursor()
+        cur.execute('select school_id from users where username = %s',(arguement,))
+        sid = cur.fetchone()
+        cur.execute('select username from users where school_id = %s',(sid,))
+        users = cur.fetchall()
+        cur.execute('select title,isbn from books join schools_books on book_id = isbn where school_id = %s and no_copies>=1',(sid,))
+        books = cur.fetchall()
+        user = request.form.get('user')
+        book = request.form.get('book')
+        save = request.form.get('save')
+        if save:
+            cur.execute('select DATEDIFF(current_date,borrow_date) from borrowings join users on username = user_id where username = %s',(user,))
+            b = cur.fetchall()
+            cur.execute('select user_id from reservations where user_id = %s',(user,))
+            nr = cur.fetchall()
+            if len(b) and b[0][0]>=7 or len(b)+len(nr)>=2:
+                return redirect('/exceeded_limits')
+            else:
+                cur.execute('SELECT username FROM users WHERE username = %s', (user,))
+                user_row = cur.fetchone()
+                cur.execute('SELECT isbn FROM books WHERE isbn = %s', (book,))
+                book_row = cur.fetchone()
+                if user_row and book_row:
+                    cur.execute('INSERT INTO borrowings (user_id, book_id) VALUES (%s, %s)', (user_row[0], book_row[0]))
+                    mysql.connection.commit()
+                    return redirect('/success')
+    return render_template("new_borrowing.html",arguement=arguement,books=books,users=users)
 
 
 @app.route('/books', methods=["GET", "POST"])
